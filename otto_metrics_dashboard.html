@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Otto Team Metrics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--purple:#230f58;--purple90:#37196e;--purple70:#5e3f8e;--purple30:#b8a8d9;--purple10:#ede9f7;--green:#37d32f;--green90:#31be2a;--grey:#314049;--grey80:#4d616e;--bg:#f0edf8;--surface:#fff;--border:rgba(35,15,88,0.1);--success:#37d32f;--warning:#f59e0b;--danger:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--purple);min-height:100vh}
+/* HEADER */
+.header{background:var(--purple);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(35,15,88,.4)}
+.logo-area{display:flex;align-items:center;gap:14px}
+.hdiv{width:1px;height:28px;background:rgba(255,255,255,.2)}
+.htitle{color:rgba(255,255,255,.8);font-size:.78rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+.hright{display:flex;align-items:center;gap:1.5rem}
+.wbadge{background:rgba(55,211,47,.15);border:1px solid rgba(55,211,47,.3);color:var(--green);padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'DM Mono',monospace}
+.lupd{color:rgba(255,255,255,.4);font-size:.72rem;font-family:'DM Mono',monospace}
+/* NAV TABS */
+.nav-tabs{background:var(--purple90);padding:0 2rem;display:flex;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;position:sticky;top:64px;z-index:90}
+.nav-tab{padding:12px 18px;color:rgba(255,255,255,.5);font-size:.78rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none;white-space:nowrap}
+.nav-tab:hover{color:rgba(255,255,255,.8)}
+.nav-tab.active{color:var(--green);border-bottom-color:var(--green);font-weight:700}
+/* FLEET BAR */
+.fleet-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 2rem;display:flex;align-items:center;gap:14px;position:sticky;top:117px;z-index:80}
+.fleet-bar.hidden{display:none}
+.fleet-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey80);white-space:nowrap}
+.fleet-btns{display:flex;gap:6px;flex-wrap:wrap}
+.fleet-btn{border:1px solid var(--border);background:transparent;padding:4px 14px;border-radius:20px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--grey80);transition:all .15s;letter-spacing:.04em;text-transform:uppercase;font-family:'DM Mono',monospace}
+.fleet-btn:hover{border-color:var(--purple);color:var(--purple)}
+.fleet-btn.active-all{background:var(--purple);color:#fff;border-color:var(--purple)}
+.fleet-btn.active-otto{background:var(--purple10);color:var(--purple);border-color:var(--purple)}
+.fleet-btn.active-weflex{background:rgba(245,158,11,.1);color:#92400e;border-color:var(--warning)}
+.fleet-btn.active-lcm{background:rgba(29,158,117,.1);color:#0f766e;border-color:#1D9E75}
+.fleet-btn.active-tfs{background:rgba(94,63,142,.12);color:var(--purple70);border-color:var(--purple70)}
+.fleet-btn.active-triple-point{background:rgba(239,68,68,.1);color:#b91c1c;border-color:var(--danger)}
+.fleet-note{margin-left:auto;font-size:.68rem;color:var(--grey80);font-family:'DM Mono',monospace}
+/* MAIN */
+.main{max-width:1440px;margin:0 auto;padding:2rem}
+.section{display:none}.section.active{display:block}
+/* SECTION HEADER */
+.sec-header{margin-bottom:1.5rem}
+.sec-title{font-size:1.4rem;font-weight:700;color:var(--purple);margin-bottom:.25rem}
+.sec-desc{font-size:.8rem;color:var(--grey)}
+/* INSIGHT BANNER */
+.insight{background:var(--purple);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;gap:1rem;align-items:flex-start}
+.insight-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px}
+.insight-ttl{color:var(--green);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem}
+.insight-txt{color:rgba(255,255,255,.85);font-size:.82rem;line-height:1.6}
+.insight-txt strong{color:#fff}
+/* FLEET BANNER */
+.fleet-banner{display:none;background:var(--purple);border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;gap:.75rem;align-items:flex-start}
+.fleet-banner.show{display:flex}
+.fleet-banner-ttl{color:var(--warning);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem}
+.fleet-banner-txt{color:rgba(255,255,255,.85);font-size:.8rem;line-height:1.5}
+.fleet-banner-txt strong{color:#fff}
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:1rem;margin-bottom:1.5rem}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(35,15,88,.12)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--green)}
+.kpi.pa::before{background:var(--purple)}.kpi.wa::before{background:var(--warning)}.kpi.da::before{background:var(--danger)}
+.kpi-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--grey80);margin-bottom:.5rem}
+.kpi-val{font-size:1.9rem;font-weight:700;color:var(--purple);line-height:1;margin-bottom:.4rem;font-family:'DM Mono',monospace}
+.kpi-val.sm{font-size:1.35rem}.kpi-val.g{color:var(--green90)}.kpi-val.r{color:var(--danger)}
+.kpi-delta{font-size:.72rem;font-weight:500;font-family:'DM Mono',monospace;color:var(--grey)}
+.kpi-delta.up{color:var(--success)}.kpi-delta.dn{color:var(--danger)}
+.kpi-delta.up-bad{color:var(--danger)}.kpi-delta.dn-good{color:var(--success)}
+/* CHART GRID */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+.cgrid1{display:grid;grid-template-columns:1fr;gap:1.25rem;margin-bottom:1.5rem}
+.cgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+@media(max-width:900px){.cgrid,.cgrid3{grid-template-columns:1fr}}
+.ccard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+.chead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem}
+.ctitle{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+.csub{font-size:.68rem;color:var(--grey);margin-top:2px}
+.cbadge{font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:10px;font-family:'DM Mono',monospace}
+.cbadge.g{background:rgba(55,211,47,.1);color:var(--green90)}.cbadge.p{background:var(--purple10);color:var(--purple)}.cbadge.r{background:rgba(239,68,68,.1);color:#b91c1c}
+.cwrap{position:relative;height:220px}.cwrap.t{height:280px}.cwrap.lg{height:300px}
+/* TABS inside cards */
+.tab-row{display:flex;gap:0;margin-bottom:1rem;border-bottom:1px solid var(--border)}
+.tab-btn{padding:7px 14px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--grey80);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;letter-spacing:.04em;text-transform:uppercase}
+.tab-btn:hover{color:var(--purple)}
+.tab-btn.active{color:var(--purple);border-bottom-color:var(--purple)}
+/* LOCATION CARDS */
+.loc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.loc-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem}
+.loc-name{font-size:.63rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey80);margin-bottom:.35rem}
+.loc-val{font-size:1.5rem;font-weight:700;font-family:'DM Mono',monospace;line-height:1;margin-bottom:.3rem}
+.loc-bar{height:5px;background:var(--purple10);border-radius:3px;overflow:hidden;margin-top:.35rem}
+.loc-fill{height:100%;border-radius:3px}
+/* HUB GRID */
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem;padding-bottom:.25rem}
+.hub-card{background:var(--purple10);border-radius:10px;padding:1rem;text-align:center}
+.hub-name{font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--purple70);margin-bottom:.5rem}
+.hub-val{font-size:1.6rem;font-weight:700;color:var(--purple);font-family:'DM Mono',monospace;line-height:1;margin-bottom:.25rem}
+.hub-sub{font-size:.65rem;color:var(--grey);font-family:'DM Mono',monospace}
+/* CLAIMS REASON GRID */
+.reason-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-bottom:.25rem}
+.reason-card{background:var(--purple10);border-radius:8px;padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem}
+.reason-bar-col{flex:1;min-width:0}
+.reason-name{font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--grey80);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reason-vals{display:flex;align-items:baseline;gap:.4rem;margin-bottom:.35rem}
+.reason-cur{font-size:1.25rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--purple);line-height:1}
+.reason-prev{font-size:.68rem;font-family:'DM Mono',monospace;color:var(--grey80)}
+.reason-mini-bar{height:4px;background:rgba(35,15,88,.12);border-radius:2px;overflow:hidden}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--purple30);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo-area">
+    <svg height="36" viewBox="0 0 120 48" fill="none">
+      <path d="M18 22C18 16.5 22.5 12 28 12h20c5.5 0 10 4.5 10 10v4c0 5.5-4.5 10-10 10H28c-5.5 0-10-4.5-10-10v-4z" stroke="#37d32f" stroke-width="3" fill="none"/>
+      <path d="M12 28c0 0 3-12 16-15" stroke="#37d32f" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M64 28c0 0-3-12-16-15" stroke="#37d32f" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <text x="25" y="31" font-family="DM Sans,sans-serif" font-weight="700" font-size="14" fill="white">otto</text>
+    </svg>
+    <div class="hdiv"></div>
+    <span class="htitle">Weekly Metrics Dashboard</span>
+  </div>
+  <div class="hright">
+    <span class="wbadge">Q1 2026</span>
+    <span class="lupd">Week ending 21 Jan 2026</span>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <div class="nav-tab active" onclick="showSection('ops',this)">Operations</div>
+  <div class="nav-tab" onclick="showSection('sales',this)">Sales</div>
+  <div class="nav-tab" onclick="showSection('freshdesk',this)">Freshdesk</div>
+  <div class="nav-tab" onclick="showSection('calls',this)">Calls</div>
+  <div class="nav-tab" onclick="showSection('claims',this)">Claims</div>
+  <div class="nav-tab" onclick="showSection('servicing',this)">Servicing</div>
+  <div class="nav-tab" onclick="showSection('credit',this)">Credit Control</div>
+</nav>
+
+<div class="fleet-bar" id="fleetBar">
+  <span class="fleet-label">Fleet view:</span>
+  <div class="fleet-btns">
+    <button class="fleet-btn active-all" id="btnAll" onclick="setFleet('all',this)">All fleets</button>
+    <button class="fleet-btn" id="btnOtto" onclick="setFleet('otto',this)">Otto only</button>
+    <button class="fleet-btn" id="btnWeflex" onclick="setFleet('weflex',this)">WeFlex only</button>
+    <button class="fleet-btn" id="btnLcm" onclick="setFleet('lcm',this)">LCM</button>
+    <button class="fleet-btn" id="btnTfs" onclick="setFleet('tfs',this)">TFS</button>
+    <button class="fleet-btn" id="btnTriplePoint" onclick="setFleet('triple-point',this)">Triple-Point</button>
+  </div>
+  <span class="fleet-note" id="fleetNote">Sales - All</span>
+</div>
+
+<main class="main">
+
+<div class="fleet-banner" id="fleetBanner" style="display:none">
+  <div style="font-size:1.4rem;flex-shrink:0">⚡</div>
+  <div><div class="fleet-banner-ttl" id="fleetBannerTtl">Fleet filter active</div><div class="fleet-banner-txt" id="fleetBannerTxt"></div></div>
+</div>
+
+<!-- ===== OPERATIONS ===== -->
+<div class="section active" id="section-ops">
+  <div class="sec-header"><h1 class="sec-title">Operations</h1><p class="sec-desc">Fleet utilisation · vehicle distribution · logistics — week of 21 Jan 2026</p></div>
+  <div class="insight"><div class="insight-icon">🚗</div><div><div class="insight-ttl">Ops — week of 21 Jan</div><div class="insight-txt" id="ops-insight">Loading insight...</div></div></div>
+  <div class="kpi-grid" id="ops-stats"></div>
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">Vehicles on site by location</div><div class="csub">Latest week — KPI limits shown where applicable</div></div></div>
+    <div class="loc-grid" id="ops-locs"></div>
+  </div>
+  <div class="cgrid">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Fleet in servicing</div><div class="csub">4-week trend</div></div></div><div class="cwrap"><canvas id="c-ops-servicing" role="img" aria-label="Fleet in servicing trend">In-servicing vehicles over 4 weeks.</canvas></div></div>
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Fleet utilisation %</div><div class="csub">Target: 98% — 4-week trend</div></div></div><div class="cwrap"><canvas id="c-ops-util" role="img" aria-label="Fleet utilisation trend">Fleet utilisation percentages.</canvas></div></div>
+  </div>
+  <div class="cgrid">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Available vs. courtesy cars</div><div class="csub">4-week comparison</div></div></div><div class="cwrap"><canvas id="c-ops-avail" role="img" aria-label="Available and courtesy cars trend">Available and courtesy cars trend.</canvas></div></div>
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Returns &amp; terminations</div><div class="csub">R2B · rental · vehicle movements</div></div></div><div class="cwrap"><canvas id="c-ops-returns" role="img" aria-label="Returns and logistics metrics">Returns and logistics data.</canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== SALES ===== -->
+<div class="section" id="section-sales">
+  <div class="sec-header"><h1 class="sec-title">Sales</h1><p class="sec-desc" id="sales-desc">R2B orders · rentals · hub performance</p></div>
+  <div class="insight"><div class="insight-icon">📈</div><div><div class="insight-ttl" id="sales-insight-title">Sales</div><div class="insight-txt" id="sales-insight">Loading insight...</div></div></div>
+  <div class="kpi-grid" id="sales-stats"></div>
+
+  <!-- R2B trend + Rentals out by make -->
+  <div class="cgrid">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">R2B orders (new &amp; used)</div><div class="csub">6-week trend</div></div></div><div class="cwrap"><canvas id="c-sales-r2b" role="img" aria-label="R2B orders trend">R2B order trends.</canvas></div></div>
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Rentals out by manufacturer</div><div class="csub">This week — fleet composition</div></div></div><div class="cwrap"><canvas id="c-sales-rentals-make" role="img" aria-label="Rentals out by manufacturer">Rentals out by make.</canvas></div></div>
+  </div>
+
+  <!-- Big net trend line chart -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">6-week net movement trends</div><div class="csub">Net rentals · net used R2B · net new R2B · regional new R2B · regional used R2B</div></div></div>
+    <div class="cwrap t"><canvas id="c-sales-net-trends" role="img" aria-label="Net movement trends line chart">Net trends over 6 weeks.</canvas></div>
+  </div>
+
+  <!-- London hub performance -->
+  <div class="ccard" style="margin-bottom:1.5rem" id="hub-tabs">
+    <div class="chead"><div><div class="ctitle">London hub performance</div><div class="csub">Latest week — toggle hub</div></div></div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="showTab('hub','Hammersmith',this)">Hammersmith</button>
+      <button class="tab-btn" onclick="showTab('hub','Redbridge',this)">Redbridge</button>
+      <button class="tab-btn" onclick="showTab('hub','Dulwich',this)">Dulwich</button>
+      <button class="tab-btn" onclick="showTab('hub','Colindale/Hendon',this)">Colindale/Hendon</button>
+    </div>
+    <div class="cwrap"><canvas id="c-sales-hubs" role="img" aria-label="London hub performance comparison">Hub performance comparison.</canvas></div>
+  </div>
+
+  <!-- Regional hub performance -->
+  <div class="ccard" style="margin-bottom:1.5rem" id="regional-hub-tabs">
+    <div class="chead"><div><div class="ctitle">Regional hub performance</div><div class="csub">Latest week — toggle hub</div></div></div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="showRegionalTab('Cardiff',this)">Cardiff</button>
+      <button class="tab-btn" onclick="showRegionalTab('Manchester',this)">Manchester</button>
+      <button class="tab-btn" onclick="showRegionalTab('Shah Manchester',this)">Shah Manchester</button>
+      <button class="tab-btn" onclick="showRegionalTab('Birmingham',this)">Birmingham</button>
+    </div>
+    <div class="cwrap"><canvas id="c-sales-regional-hubs" role="img" aria-label="Regional hub performance comparison">Regional hub comparison.</canvas></div>
+  </div>
+
+  <!-- Available vehicles + in-service rentals -->
+  <div class="cgrid">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">In-service rentals</div><div class="csub">6-week trend</div></div></div><div class="cwrap"><canvas id="c-sales-isr" role="img" aria-label="In-service rentals trend">In-service rentals trend.</canvas></div></div>
+    <div class="ccard">
+      <div class="chead"><div><div class="ctitle">Available vehicles &amp; Kings Mall</div><div class="csub">Group available · Kings Mall available · avg days off road</div></div></div>
+      <div class="kpi-grid" id="sales-avail-stats" style="margin-bottom:1rem"></div>
+      <div class="cwrap" style="height:180px"><canvas id="c-sales-avail" role="img" aria-label="Available vehicles and Kings Mall trend">Available vehicles trend.</canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FRESHDESK ===== -->
+<div class="section" id="section-freshdesk">
+  <div class="sec-header"><h1 class="sec-title">Freshdesk</h1><p class="sec-desc">Ticket volumes · response metrics · overdue breakdown — week of 16 Jan 2026</p></div>
+  <div class="insight"><div class="insight-icon">🎧</div><div><div class="insight-ttl">Freshdesk — week of 16 Jan</div><div class="insight-txt" id="fd-insight">Loading insight...</div></div></div>
+  <div class="kpi-grid" id="fd-stats"></div>
+  <div class="cgrid1">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Tickets received vs overdue - trend</div><div class="csub">Total tickets received (purple) · overdue tickets (red) - 6-week view</div></div></div><div class="cwrap t"><canvas id="c-fd-vol" role="img" aria-label="Tickets received vs overdue trend">Tickets received and overdue trend.</canvas></div></div>
+  </div>
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">Overdue tickets by department</div><div class="csub">Latest week breakdown — all queues</div></div><span class="cbadge r" id="fd-overdue-total-badge">—</span></div>
+    <div id="fd-overdue-dept-grid" style="margin-top:.25rem"></div>
+    <div class="cwrap lg" style="margin-top:1.25rem"><canvas id="c-fd-overdue-dept" role="img" aria-label="Overdue tickets by department">Overdue by department.</canvas></div>
+  </div>
+</div>
+
+<!-- ===== CALLS ===== -->
+<div class="section" id="section-calls">
+  <div class="sec-header"><h1 class="sec-title">Call Centre</h1><p class="sec-desc">Answer rates by department — week of 22 Jan 2026</p></div>
+  <div class="insight"><div class="insight-icon">📞</div><div><div class="insight-ttl">Calls — week of 22 Jan</div><div class="insight-txt" id="calls-insight">Loading insight...</div></div></div>
+  <div class="kpi-grid" id="calls-stats"></div>
+  <div class="cgrid">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Payment - total vs answered</div><div class="csub">6-week trend</div></div></div><div class="cwrap"><canvas id="c-calls-pay" role="img" aria-label="Payment total vs answered">Payment queue trend.</canvas></div></div>
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Servicing - total vs answered</div><div class="csub">6-week trend</div></div></div><div class="cwrap"><canvas id="c-calls-svc" role="img" aria-label="Servicing total vs answered">Servicing queue trend.</canvas></div></div>
+  </div>
+  <div class="cgrid">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Telesales - total vs answered</div><div class="csub">6-week trend</div></div></div><div class="cwrap"><canvas id="c-calls-tel" role="img" aria-label="Telesales total vs answered">Telesales queue trend.</canvas></div></div>
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Enquiries - total vs answered</div><div class="csub">6-week trend</div></div></div><div class="cwrap"><canvas id="c-calls-enq" role="img" aria-label="Enquiries total vs answered">Enquiries queue trend.</canvas></div></div>
+  </div>
+  <div class="cgrid1">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Average wait time by department</div><div class="csub">Seconds - latest 6 weeks</div></div></div><div class="cwrap t"><canvas id="c-calls-wait" role="img" aria-label="Average wait time by department">Average wait time chart.</canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== CLAIMS ===== -->
+<div class="section" id="section-claims">
+  <div class="sec-header"><h1 class="sec-title">Claims</h1><p class="sec-desc">Fault ratios · vehicles on site · claims assessed · third party interventions — week of 27 Feb 2025</p></div>
+  <div class="insight"><div class="insight-icon">🔧</div><div><div class="insight-ttl">Claims — week of 27 Feb</div><div class="insight-txt" id="claims-insight">Loading insight...</div></div></div>
+
+  <!-- CLAIMS RATIOS — top of page -->
+  <div class="kpi-grid" id="claims-ratio-stats"></div>
+
+  <!-- VEHICLES ONSITE -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">Vehicles on site</div><div class="csub">A2Z &amp; Long Lane / Aktrion — Colindale</div></div><span class="cbadge p" id="cl-onsite-total-badge">—</span></div>
+    <div class="kpi-grid" id="claims-onsite-stats"></div>
+    <div class="cwrap" style="height:180px;margin-top:1rem"><canvas id="c-claims-onsite-trend" role="img" aria-label="Total vehicles on site 4-week trend">Onsite trend chart.</canvas></div>
+  </div>
+
+  <!-- ONSITE BREAKDOWN BY REASON -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">On-site vehicle breakdown by reason</div><div class="csub">Latest week vs previous week</div></div></div>
+    <div id="claims-reason-grid"></div>
+    <div class="cgrid" style="margin-top:1.25rem;margin-bottom:0">
+      <div>
+        <div class="ctitle" style="margin-bottom:.75rem;font-size:.72rem">Current week composition</div>
+        <div class="cwrap" style="height:220px"><canvas id="c-claims-reasons-donut" role="img" aria-label="Onsite reasons donut chart">Onsite reasons breakdown.</canvas></div>
+      </div>
+      <div>
+        <div class="ctitle" style="margin-bottom:.75rem;font-size:.72rem">Total vehicles on site — 4-week trend</div>
+        <div class="cwrap" style="height:220px"><canvas id="c-claims-onsite-total-trend" role="img" aria-label="Total vehicles on site trend line">Total onsite 4-week trend.</canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAIMS ASSESSED -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">Claims assessed</div><div class="csub">Total assessed this week with type breakdown</div></div><span class="cbadge p" id="cl-assessed-total-badge">—</span></div>
+    <div class="kpi-grid" id="claims-assessed-stats"></div>
+    <div class="cgrid" style="margin-top:1.25rem;margin-bottom:0">
+      <div>
+        <div class="ctitle" style="margin-bottom:.75rem;font-size:.72rem">Assessed by type — latest week</div>
+        <div class="cwrap" style="height:220px"><canvas id="c-claims-assessed-bar" role="img" aria-label="Claims assessed by type">Claims by type bar chart.</canvas></div>
+      </div>
+      <div>
+        <div class="ctitle" style="margin-bottom:.75rem;font-size:.72rem">4-week trend — fault vs non-fault</div>
+        <div class="cwrap" style="height:220px"><canvas id="c-claims-fault-trend" role="img" aria-label="Fault vs non-fault trend">Fault trend chart.</canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THIRD PARTY INTERVENTIONS -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">Third party interventions</div><div class="csub">Total this week with breakdown by type</div></div><span class="cbadge p" id="cl-tpi-total-badge">—</span></div>
+    <div class="kpi-grid" id="claims-tpi-stats"></div>
+    <div class="cwrap" style="height:220px;margin-top:1rem"><canvas id="c-claims-tpi-trend" role="img" aria-label="Third party interventions 4-week line trend">Third party intervention trend.</canvas></div>
+  </div>
+
+</div>
+
+<!-- ===== SERVICING ===== -->
+<div class="section" id="section-servicing">
+  <div class="sec-header"><h1 class="sec-title">Servicing</h1><p class="sec-desc">Fleet servicing status · make breakdown — week of 21 Jan 2026</p></div>
+  <div class="insight"><div class="insight-icon">🔩</div><div><div class="insight-ttl">Servicing — week of 21 Jan</div><div class="insight-txt" id="svc-insight">Loading insight...</div></div></div>
+  <div class="kpi-grid" id="svc-stats"></div>
+  <div class="cgrid">
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Fleet in servicing trend</div><div class="csub">Count — 4-week view</div></div></div><div class="cwrap"><canvas id="c-svc-trend" role="img" aria-label="Fleet in servicing trend">Fleet servicing trend.</canvas></div></div>
+    <div class="ccard"><div class="chead"><div><div class="ctitle">Vehicles by make — latest week</div><div class="csub">Distribution in servicing</div></div></div><div class="cwrap"><canvas id="c-svc-makes" role="img" aria-label="Vehicles in servicing by make">Vehicle make breakdown.</canvas></div></div>
+  </div>
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">In-servicing status breakdown</div><div class="csub">Current pipeline — latest week</div></div><span class="cbadge p" id="svc-status-total-badge">—</span></div>
+    <div id="svc-status-cards" style="margin-bottom:1.25rem"></div>
+    <div class="cgrid" style="margin-bottom:0">
+      <div><div class="ctitle" style="font-size:.72rem;margin-bottom:.75rem">Status composition</div><div class="cwrap" style="height:240px"><canvas id="c-svc-status-donut" role="img" aria-label="Servicing status donut">Status donut chart.</canvas></div></div>
+      <div><div class="ctitle" style="font-size:.72rem;margin-bottom:.75rem">Volume by status</div><div class="cwrap" style="height:240px"><canvas id="c-svc-status" role="img" aria-label="Servicing status bar chart">Status bar chart.</canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CREDIT CONTROL ===== -->
+<div class="section" id="section-credit">
+  <div class="sec-header"><h1 class="sec-title">Credit Control</h1><p class="sec-desc">Invoice collection · arrears · write-offs · fleet breakdown — week of 26 Jan 2024</p></div>
+  <div class="insight"><div class="insight-icon">💳</div><div><div class="insight-ttl">Credit Control — week of 26 Jan</div><div class="insight-txt" id="cc-insight">Loading insight...</div></div></div>
+
+  <!-- KEY STATS KPI BOXES -->
+  <div class="kpi-grid" id="cc-stats"></div>
+
+  <!-- LIVE SUBSCRIPTIONS BREAKDOWN TABLE -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead">
+      <div><div class="ctitle">Live Subscriptions Breakdown</div><div class="csub">Active subscribers by product type — latest 4 weeks</div></div>
+      <span class="cbadge p" id="cc-total-subs-badge">Loading...</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="cc-subs-table" style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">Product</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">05 Jan</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">12 Jan</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">19 Jan</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">26 Jan</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">Trend</th>
+          </tr>
+        </thead>
+        <tbody id="cc-subs-tbody"></tbody>
+        <tfoot id="cc-subs-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- TOTAL ARREARS 4-WEEK LINE CHART -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead">
+      <div><div class="ctitle">Total Arrears — 4-Week Trend</div><div class="csub">Ordway active arrears (£) — all weeks</div></div>
+      <span class="cbadge r" id="cc-arrears-badge">Loading...</span>
+    </div>
+    <div class="cwrap lg"><canvas id="c-cc-arrears" role="img" aria-label="Total arrears 4-week trend">Total arrears trend.</canvas></div>
+  </div>
+
+  <!-- ARREARS PROFILE BY FLEET -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead">
+      <div><div class="ctitle">Arrears Profile by Fleet — Latest Week</div><div class="csub">Week 1–4+ breakdown across all fleet segments</div></div>
+    </div>
+    <!-- Fleet selector tabs -->
+    <div class="tab-row" id="cc-fleet-tabs">
+      <button class="tab-btn active" onclick="showArrearFleet('overall',this)">Overall</button>
+      <button class="tab-btn" onclick="showArrearFleet('london',this)">London</button>
+      <button class="tab-btn" onclick="showArrearFleet('manchester',this)">Manchester</button>
+      <button class="tab-btn" onclick="showArrearFleet('birmingham',this)">Birmingham</button>
+      <button class="tab-btn" onclick="showArrearFleet('cardiff',this)">Cardiff</button>
+    </div>
+    <!-- Arrears profile table -->
+    <div style="overflow-x:auto;margin-bottom:1.25rem">
+      <table id="cc-arrears-profile-table" style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">Bucket</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">Amount (£)</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">% of Total</th>
+            <th style="padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">Profile Bar</th>
+            <th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700">KPI Status</th>
+          </tr>
+        </thead>
+        <tbody id="cc-arrears-profile-tbody"></tbody>
+        <tfoot id="cc-arrears-profile-tfoot"></tfoot>
+      </table>
+    </div>
+    <!-- Stacked bar chart for selected fleet -->
+    <div class="cwrap"><canvas id="c-cc-profile-chart" role="img" aria-label="Arrears profile chart">Arrears profile by bucket.</canvas></div>
+  </div>
+
+  <!-- FULL WEEK-BY-WEEK METRICS TABLE (like screenshot) -->
+  <div class="ccard" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">CC Full Data — All Weeks</div><div class="csub">Complete arrears metrics table</div></div></div>
+    <div style="overflow-x:auto">
+      <table id="cc-full-table" style="width:100%;border-collapse:collapse;font-size:.79rem">
+        <thead id="cc-full-thead"></thead>
+        <tbody id="cc-full-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const DATA = {"sales":{"weeks":["2025-05-02","2025-05-09","2025-05-16","2025-05-23"],"total_r2b_new":[14,8,4,11],"total_r2b_used":[16,22,22,19],"rentals_in":[41,37,40,52],"rentals_out":[59,38,63,49],"net_rentals":[18,1,23,-16],"net_r2b":[15,10,14,20],"r2b_collections":[30,19,26,36],"available_vehicles":[293,292,314,313],"kings_mall_avail":[88,86,98,99],"avg_days_offroad":[56.1,55.4,58.6,56.5],"isr_out":[15,10,27,15],"regional_new":[9,4,0,6],"regional_used":[1,3,7,5],"london_new":[5,4,4,5],"london_used":[12,19,15,13],"makes_in_service":{"HYUNDAI":[22,65,99,97],"KIA":[76,26,48,12],"MERCEDES":[62,37,94,85],"MG":[60,78,22,70],"NISSAN":[67,88,95,43],"SKODA":[54,75,75,80],"TESLA":[55,73,41,78],"TOYOTA":[46,16,54,73],"VW":[72,34,0,7],"Polestar":[78,51,85,84]},"hubs":{"Hammersmith":{"new_r2b":[1,1,2,0],"used_r2b":[1,8,2,5],"rentals_in":[17,17,20,20],"rentals_out":[27,17,26,20]},"Redbridge":{"new_r2b":[1,0,0,0],"used_r2b":[2,2,2,1],"rentals_in":[13,9,2,10],"rentals_out":[13,9,13,9]},"Dulwich":{"new_r2b":[1,2,1,2],"used_r2b":[4,3,4,3],"rentals_in":[7,7,13,10],"rentals_out":[9,7,18,9]},"Colindale/Hendon":{"new_r2b":[2,1,1,1],"used_r2b":[5,6,6,4],"rentals_in":[4,7,5,12],"rentals_out":[10,7,6,7]}},"regional_hubs":{"Cardiff":{"new_r2b":[2,2,0,1],"used_r2b":[0,0,1,1],"returns":[0,0,1,0]},"Manchester":{"new_r2b":[0,0,0,5],"used_r2b":[0,0,3,4],"returns":[0,0,0,1]},"Birmingham":{"new_r2b":[7,2,0,0],"used_r2b":[1,3,3,0],"returns":[0,0,0,0]}}},"ops":{"weeks":["2026-01-01","2026-01-07","2026-01-14","2026-01-21"],"dvla_fleet":[3800,3800,3800,3800],"ordway_live":[2300,2300,2300,2300],"courtesy_cars":[57,60,57,67],"in_service_rentals":[102,102,102,102],"in_servicing":[800,890,800,670],"available":[304,304,310,304],"fleet_utilisation":[98,98,96,97],"total_onsite":[2316,1317,1498,1419],"vehicle_movements":[42,42,42,42],"sites":{"Northfields":[109,181,50,99],"Ealing":[170,5,182,62],"Sussex":[225,61,108,60],"Ilford":[138,74,47,85],"Dulwich":[222,179,155,46],"Hounslow":[66,62,18,142],"Colindale":[242,92,177,22],"Hendon":[39,38,33,13],"Kings Mall":[108,54,10,116],"Shepherds Bush":[172,58,187,93],"Manchester":[97,192,152,131],"Birmingham":[59,14,167,184]}},"freshdesk":{"weeks":["2025-12-12","2025-12-19","2025-12-26","2026-01-02","2026-01-09","2026-01-16"],"overdue":[95,102,107,179,114,120],"total_open":[520,545,570,710,561,794],"received":[980,995,1014,1062,2061,1705],"csat":[0.68,0.66,0.64,0.8,0.75,0.56],"fcr":[0.72,0.735,0.73,0.7451,0.74,0.7567],"unanswered":[580,598,611,622,1088,172],"avg_first_response_hrs":[4.5,4.3,4.2,3.8,5.1,4.6],"avg_resolution_hrs":[29.2,28.8,28.4,24.1,31.7,27.3],"overdue_by_dept":{"Unassigned":18,"Claims":12,"Complaints":9,"Congestion":14,"Credit Control":8,"Dashcam Project":5,"Holiday Requests":3,"Info":4,"Insurance":11,"PCN Team":7,"PHV":6,"Sales":5,"Servicing":10,"Telematics":4,"Manchester":4},"categories":{"Claims":[220,235,239,24,10,28],"Complaints":[230,240,246,156,91,89],"Congestion":[215,228,241,227,226,146],"Credit Control":[110,118,1,126,92,198],"Holiday Requests":[105,109,113,228,226,108],"Insurance":[165,172,178,55,178,218],"Sales":[35,38,41,203,22,63],"Servicing":[180,188,193,146,198,160]}},"calls":{"weeks":["2025-12-18","2025-12-25","2026-01-01","2026-01-08","2026-01-15","2026-01-22"],"payment":{"total":[135,140,143,165,180,165],"answered":[112,115,118,158,144,143],"answered_pct":[0.830,0.821,0.825,0.958,0.8,0.867],"sla_pct":[0.70,0.72,0.73,0.99,0.92,0.93],"avg_wait":[102,98,95,48,112,87]},"servicing":{"total":[155,160,164,172,166,330],"answered":[98,102,104,146,161,219],"answered_pct":[0.632,0.638,0.634,0.849,0.97,0.664],"sla_pct":[0.80,0.81,0.82,0.79,1.0,0.44],"avg_wait":[148,145,142,118,62,198]},"telesales":{"total":[82,85,88,97,112,104],"answered":[70,72,74,89,101,91],"answered_pct":[0.854,0.847,0.841,0.918,0.902,0.875],"sla_pct":[0.86,0.87,0.88,0.94,0.96,0.91],"avg_wait":[72,70,68,52,59,74]},"enquiries":{"total":[158,162,167,152,125,160],"answered":[118,120,123,148,125,155],"answered_pct":[0.747,0.741,0.737,0.974,1.0,0.969],"sla_pct":[0.58,0.59,0.6,1.0,1.0,0.99],"avg_wait":[130,127,124,71,55,63]}},"claims":{"weeks":["2025-02-06","2025-02-13","2025-02-20","2025-02-27"],
+  "a2z":[212,195,210,210],
+  "longlane":[16,12,0,0],
+  "total_vehicles":[228,207,210,210],
+  "claims_related":[152,168,171,193],
+  "non_claims":[76,60,39,17],
+  "scrap":[10,52,47,46],
+  "new_jobs":[39,0,21,71],
+  "in_repair":[92,61,42,47],
+  "ready_to_collect":[7,32,59,27],
+  "courtesy":[0,0,0,0],
+  "awaiting_parts_lt10":[4,0,0,0],
+  "backorder_parts_10plus":[0,2,2,2],
+  "fault_ratio_assessed":[0.385965,0.482143,0.431373,0.5],
+  "fault":[22,27,22,12],
+  "non_fault":[35,29,29,12],
+  "fifty_fifty":[2,1,2,0],
+  "glass":[0,0,0,0],
+  "no_tp_non_event":[0,2,5,1],
+  "liability_to_assess":[0,0,0,0],
+  "walk_in":[0,0,0,0],
+  "stolen":[0,1,0,0],
+  "total_claims_handled":[59,60,58,25],
+  "fault_ratio":[0.372881,0.45,0.37931,0.48],
+  "non_fault_ratio":[0.59322,0.483333,0.5,0.48],
+  "fleet_size":[5946,5870,5870,5870],
+  "accident_fleet_ratio":[0.009923,0.010221,0.009881,0.004259],
+  "rolling_4wk_avg":[0.009923,0.010072,0.010008,0.008571],
+  "tpi_non_faults":[19,14,0,0],
+  "tpi_faults":[14,17,21,14],
+  "tpi_no_intervention":[21,11,8,23],
+  "tpi_captured":[14,22,4,7]
+},"servicing":{"weeks":["2026-01-01","2026-01-07","2026-01-14","2026-01-21"],"count_in_servicing":[256,280,270,260],"pct_in_servicing":[0.0289,0.013,0.025,0.026],"fleet_number":[4987,5000,4980,4700],"avg_days_offroad":[14.2,16.8,15.3,13.7],"makes":{"HYUNDAI":[22,65,99,97],"KIA":[76,26,48,12],"MERCEDES":[62,37,94,85],"MG":[60,78,22,70],"NISSAN":[67,88,95,43],"SKODA":[54,75,75,80],"TESLA":[55,73,41,78],"TOYOTA":[46,16,54,73],"VW":[72,34,0,7],"Polestar":[78,51,85,84]},"northfields_yard":[67,66,46,0],"pending_workshop":[85,45,25,71],"available_courtesy":[65,94,25,70],"ready_for_sales":[29,97,94,84],"awaiting_customer_collection":[18,22,15,20],"panel_work_required":[24,18,31,27],"other":[12,16,9,14],"waiting_phv_date":[8,11,6,9]},"creditcontrol":{"weeks":["2024-01-05","2024-01-12","2024-01-19","2024-01-26","2024-02-02","2024-02-09","2024-02-16","2024-02-23","2024-03-01","2024-03-08","2024-03-15","2024-03-22"],"paid_invoice_pct":[0.9202,0.9295,0.9306,0.9334,0.9398,0.9493,0.9478,0.9574,0.9412,0.9571,0.9477,0.9474],"four_week_collection":[0.9875,0.9871,0.9956,0.9931,0.9905,0.9940,0.9957,0.9918,0.9926,0.9924,0.9928,0.9926],"arrears_total":[175441,163621,165755,153658,147606,144778,130878,131507,139455,132858,124300,124662],"week1_arrears":[99086,90318,99286,86586,83226,81354,76455,73797,79845,76411,70993,68688],"week2_arrears":[26540,23624,22836,20832,15718,14566,13439,15366,17081,17186,13893,14687],"week3_arrears":[8060,7232,6129,6700,6542,6249,3630,3144,5575,3837,5330,4782],"week4_arrears":[3991,4199,3704,3861,3900,3906,2442,2733,1009,3290,1174,4133],"over4wk_arrears":[37765,38249,33800,35680,38220,38702,34911,36466,35944,32135,32910,32371],"over4wk_pct":[0.2153,0.2338,0.2039,0.2322,0.2589,0.2673,0.2667,0.2773,0.2577,0.2419,0.2648,0.2597],"write_offs_total":[381977,381977,381977,409456,409456,409456,409456,409456,409456,424911,424911,424911],"r2b":[3079,3083,3087,3087,3089,3102,3099,3105,3090,3082,3074,3057],"r2b_van":[62,60,59,58,57,56,55,54,53,52,51,50],"short_term_rental":[1201,1197,1176,1175,1169,1165,1155,1162,1173,1179,1167,1154],"pco_flex":[0,0,0,0,0,0,0,0,0,0,0,0],"aftercare":[276,283,288,284,282,282,282,271,281,281,286,290],"dashcam":[396,412,426,438,445,452,460,468,475,482,490,498],"repos_requested":[10,19,9,4,5,8,4,11,9,7,9,8],"repos_collected":[4,5,5,4,3,6,2,8,5,4,7,6],"fleet_arrears":{"overall":{"week1":99086,"week2":26540,"week3":8060,"week4":3991,"week4p":37765,"total":175441},"london":{"week1":45000,"week2":12000,"week3":3500,"week4":1800,"week4p":17000,"total":79300},"manchester":{"week1":40297,"week2":39086,"week3":34934,"week4":6065,"week4p":13298,"total":133680},"birmingham":{"week1":8200,"week2":2100,"week3":650,"week4":320,"week4p":4200,"total":15470},"cardiff":{"week1":5589,"week2":1354,"week3":976,"week4":806,"week4p":3267,"total":11992}}}};
+
+// Fleet state maps to the Sales sheet tabs.
+let currentFleet = 'all';
+let currentSection = 'ops';
+let selectedLondonHub = 'Hammersmith';
+let selectedRegionalHub = 'Cardiff';
+const charts = {};
+
+const FLEET_VIEWS = {
+  all: {label:'All fleets', sheet:'Sales - All', activeClass:'active-all', btnId:'btnAll'},
+  otto: {label:'Otto', sheet:'Sales - Otto', activeClass:'active-otto', btnId:'btnOtto'},
+  weflex: {label:'WeFlex', sheet:'Sales - Weflex', activeClass:'active-weflex', btnId:'btnWeflex'},
+  lcm: {label:'LCM', sheet:'Sales - LCM', activeClass:'active-lcm', btnId:'btnLcm'},
+  tfs: {label:'TFS', sheet:'Sales - TFS', activeClass:'active-tfs', btnId:'btnTfs'},
+  'triple-point': {label:'Triple-Point', sheet:'Sales - TP', activeClass:'active-triple-point', btnId:'btnTriplePoint'}
+};
+
+// Non-sales sections still use rough demo scaling until their real data sources exist.
+const FLEET_FACTORS = {all:1, otto:0.7, weflex:0.3, lcm:1, tfs:1, 'triple-point':1};
+
+function fleetScale(val, fleet) {
+  if(!val && val!==0) return 0;
+  if(fleet==='all') return val;
+  const base = val * (FLEET_FACTORS[fleet] || 1);
+  return Math.round(base * 10) / 10;
+}
+
+function scaleArr(arr, fleet) {
+  return (arr || []).map(v => fleetScale(v, fleet));
+}
+
+function zeroSeries(length) {
+  return Array.from({length}, () => 0);
+}
+
+function salesDataForCurrentFleet() {
+  const source = (DATA.salesByFleet && DATA.salesByFleet[currentFleet]) || DATA.sales;
+  const weeks = source && source.weeks ? source.weeks : [];
+  const zeros = zeroSeries(weeks.length);
+  const regionalHubs = source && source.regional_hubs ? source.regional_hubs : {};
+
+  return {
+    ...source,
+    website_sales: source.website_sales || zeros,
+    regional_new: source.regional_new || zeros,
+    regional_used: source.regional_used || zeros,
+    regional_hubs: {
+      Cardiff: regionalHubs.Cardiff || {new_r2b: zeros, used_r2b: zeros, returns: zeros},
+      Manchester: regionalHubs.Manchester || {new_r2b: zeros, used_r2b: zeros, returns: zeros},
+      'Shah Manchester': regionalHubs['Shah Manchester'] || {new_r2b: zeros, used_r2b: zeros, returns: zeros},
+      Birmingham: regionalHubs.Birmingham || {new_r2b: zeros, used_r2b: zeros, returns: zeros}
+    }
+  };
+}
+
+function syncFleetUi() {
+  const view = FLEET_VIEWS[currentFleet] || FLEET_VIEWS.all;
+  document.querySelectorAll('.fleet-btn').forEach(b=>{b.className='fleet-btn';});
+  const btn = document.getElementById(view.btnId);
+  if(btn) btn.className = `fleet-btn ${view.activeClass}`;
+  document.getElementById('fleetNote').textContent = view.sheet;
+
+  const banner = document.getElementById('fleetBanner');
+  if(currentFleet!=='all' && currentSection==='sales') {
+    document.getElementById('fleetBannerTtl').textContent = view.label+' sales view active';
+    document.getElementById('fleetBannerTxt').innerHTML = `Sales metrics are shown from <strong>${view.sheet}</strong>.`;
+    banner.style.display='flex';
+  } else if(currentFleet!=='all') {
+    document.getElementById('fleetBannerTtl').textContent = view.label+' fleet filter active';
+    document.getElementById('fleetBannerTxt').innerHTML = `This section still uses demo data. Real source data has only been prepared for Sales.`;
+    banner.style.display='flex';
+  } else {
+    banner.style.display='none';
+  }
+}
+
+function delta(cur, prev) {
+  if(!prev) return null;
+  return Math.round(((cur - prev) / prev) * 100);
+}
+
+function deltaHtml(cur, prev) {
+  if(!prev && prev!==0) return '<span class="kpi-delta">—</span>';
+  const d = Math.round(((cur - prev) / Math.abs(prev||1)) * 100);
+  if(d > 0) return `<span class="kpi-delta up">↑${Math.abs(d)}% wk/wk</span>`;
+  if(d < 0) return `<span class="kpi-delta dn">↓${Math.abs(d)}% wk/wk</span>`;
+  return `<span class="kpi-delta">stable</span>`;
+}
+
+function deltaHtmlInverse(cur, prev) {
+  if(!prev && prev!==0) return '<span class="kpi-delta">—</span>';
+  const d = Math.round(((cur - prev) / Math.abs(prev||1)) * 100);
+  if(d > 0) return `<span class="kpi-delta up-bad">↑${Math.abs(d)}% wk/wk</span>`;
+  if(d < 0) return `<span class="kpi-delta dn-good">↓${Math.abs(d)}% wk/wk</span>`;
+  return `<span class="kpi-delta">stable</span>`;
+}
+
+function statCard(label, value, prevValue, unit='', accentClass='', opts={}) {
+  const dh = opts.inverseDelta ? deltaHtmlInverse(value, prevValue) : deltaHtml(value, prevValue);
+  let displayVal;
+  if(unit==='%') displayVal = (value*100).toFixed(1)+'%';
+  else if(unit==='£') displayVal = '£'+(+value).toLocaleString('en-GB',{maximumFractionDigits:0});
+  else if(unit===' hrs') displayVal = (+value).toFixed(1)+'h';
+  else displayVal = Math.round(value).toLocaleString();
+  const valCls = accentClass==='green'?'g':accentClass==='red'?'r':'';
+  const cardCls = accentClass==='red'||accentClass==='da'?'da':accentClass==='orange'||accentClass==='wa'?'wa':accentClass==='pa'?'pa':'';
+  return `<div class="kpi ${cardCls}"><div class="kpi-label">${label}</div><div class="kpi-val sm ${valCls}">${displayVal}</div>${dh}</div>`;
+}
+
+function weekLabels(weeks) {
+  return weeks.map(w => {
+    const d = new Date(w); 
+    return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  });
+}
+
+function longWeekLabel(value) {
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function shortWeekLabel(value) {
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+
+const P='#230f58', G='#37d32f', G2='#31be2a';
+const PAL=['#230f58','#37d32f','#5e3f8e','#31be2a','#b8a8d9','#88d985','#4d616e','#f59e0b','#ef4444','#7c5cbf','#56c553','#a8c5cc'];
+const PURPLE='#230f58', GREEN='#37d32f', AMBER='#f59e0b', RED='#ef4444', GREY='#314049', LBLUE='#5e3f8e', TEAL='#1D9E75';
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color='#314049';
+const TT={backgroundColor:P,padding:10,cornerRadius:8,titleFont:{weight:'700'}};
+const BASE_OPTS={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{grid:{color:'rgba(35,15,88,0.06)'},ticks:{font:{size:10}}}}};
+function bc(o={}){return{...JSON.parse(JSON.stringify(BASE_OPTS)),...o}}
+function mkLegend(){return{display:true,position:'bottom',labels:{boxWidth:10,font:{size:10},color:'#314049'}}}
+
+function mkChart(id, type, labels, datasets, opts={}) {
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  if(charts[id]) charts[id].destroy();
+  const merged = bc();
+  merged.plugins.legend = {display:false};
+  Object.assign(merged, opts);
+  if(opts.scales) merged.scales = opts.scales;
+  charts[id] = new Chart(ctx, {type, data:{labels, datasets}, options: merged});
+}
+
+// ===== RENDER SECTIONS =====
+
+function renderOps() {
+  const d = DATA.ops; const fl = currentFleet;
+  const wk = weekLabels(d.weeks);
+  const cur=3, prev=2;
+  const av = scaleArr(d.available, fl);
+  const sv = scaleArr(d.in_servicing, fl);
+  const ut = d.fleet_utilisation;
+  const cc = scaleArr(d.courtesy_cars, fl);
+  const dvla = fleetScale(d.dvla_fleet[cur],fl);
+  const live = fleetScale(d.ordway_live[cur],fl);
+
+  // Insight
+  document.getElementById('ops-insight').innerHTML = `DVLA fleet <strong>${Math.round(dvla).toLocaleString()}</strong> with <strong>${Math.round(live).toLocaleString()} live accounts</strong>. Fleet utilisation at <strong>${ut[cur]}%</strong>${ut[cur]<97?' — below 98% target':''}. In servicing: <strong>${Math.round(sv[cur])}</strong> vehicles${sv[cur]>sv[prev]?' — up wk/wk':' — stable'}. Available: <strong>${Math.round(av[cur])}</strong>. Total on site: <strong>${Math.round(fleetScale(d.total_onsite[cur],fl)).toLocaleString()}</strong>.`;
+
+  document.getElementById('ops-stats').innerHTML =
+    statCard('DVLA Fleet', dvla, fleetScale(d.dvla_fleet[prev],fl)) +
+    statCard('Live accounts', live, fleetScale(d.ordway_live[prev],fl), '', 'pa') +
+    statCard('In servicing', sv[cur], sv[prev], '', sv[cur]>800?'wa':'') +
+    statCard('Available', av[cur], av[prev]) +
+    statCard('Courtesy cars', cc[cur], cc[prev]) +
+    statCard('Fleet utilisation', ut[cur]/100, ut[prev]/100, '%', ut[cur]>=97?'green':ut[cur]>=95?'orange':'red') +
+    statCard('Vehicles on site', fleetScale(d.total_onsite[cur],fl), fleetScale(d.total_onsite[prev],fl), '', 'pa');
+
+  // Location cards
+  const sites = d.sites; const kpis = {Northfields:60, Colindale:60, 'Kings Mall':40};
+  document.getElementById('ops-locs').innerHTML = Object.keys(sites).map(s => {
+    const v = Math.round(fleetScale(sites[s][cur], fl));
+    const kpi = kpis[s];
+    const over = kpi && v > fleetScale(kpi,fl);
+    const maxV = kpi ? Math.max(fleetScale(kpi,fl), v) : v || 1;
+    const pct = Math.min(100,(v/maxV)*100);
+    const col = over ? 'var(--danger)' : P;
+    return `<div class="loc-card"><div class="loc-name">${s}${kpi?` <span style="font-size:.58rem;color:var(--grey)">KPI:${kpi}</span>`:''}</div><div class="loc-val" style="color:${col}">${v}</div><div class="loc-bar"><div class="loc-fill" style="width:${pct}%;background:${col}"></div></div></div>`;
+  }).join('');
+
+  mkChart('c-ops-servicing','line',wk,[
+    {label:'In servicing',data:sv,borderColor:P,backgroundColor:'rgba(35,15,88,0.07)',fill:true,tension:.4,pointRadius:3}
+  ]);
+
+  mkChart('c-ops-util','line',wk,[
+    {label:'Utilisation %',data:ut,borderColor:G,backgroundColor:'rgba(55,211,47,0.07)',fill:true,tension:.4,pointRadius:3}
+  ],{scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{min:90,max:100,grid:{color:'rgba(35,15,88,.06)'},ticks:{callback:v=>v+'%',font:{size:10}}}}});
+
+  mkChart('c-ops-avail','bar',wk,[
+    {label:'Available',data:av,backgroundColor:P,stack:'r',borderRadius:0},
+    {label:'Courtesy',data:cc,backgroundColor:G,stack:'r',borderRadius:4}
+  ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  const R2B_TERM = scaleArr([26,26,26,26],fl);
+  const RENT_TERM = scaleArr([42,42,42,42],fl);
+  mkChart('c-ops-returns','line',wk,[
+    {label:'R2B terminations',data:R2B_TERM,borderColor:P,backgroundColor:'transparent',tension:.4,pointRadius:3},
+    {label:'Rental terminations',data:RENT_TERM,borderColor:G,backgroundColor:'transparent',tension:.4,pointRadius:3},
+  ],{plugins:{legend:mkLegend(),tooltip:TT}});
+}
+
+function renderSales() {
+  const d = salesDataForCurrentFleet(); const fl = 'all';
+  const wk = weekLabels(d.weeks);
+  const cur=d.weeks.length-1, prev=Math.max(0, cur-1);
+  const latestWeek = d.weeks[cur];
+  const latestLong = longWeekLabel(latestWeek);
+  const latestShort = shortWeekLabel(latestWeek);
+  const fleetView = FLEET_VIEWS[currentFleet] || FLEET_VIEWS.all;
+  const nr2b  = scaleArr(d.total_r2b_new, fl);
+  const ur2b  = scaleArr(d.total_r2b_used, fl);
+  const ri    = scaleArr(d.rentals_in, fl);
+  const ro    = scaleArr(d.rentals_out, fl);
+  const netnr = scaleArr(d.net_rentals, fl);
+  const netr2b= scaleArr(d.net_r2b, fl);
+  const av    = scaleArr(d.available_vehicles, fl);
+  const km    = scaleArr(d.kings_mall_avail, fl);
+  const isr   = scaleArr(d.isr_out, fl);
+  const ws    = scaleArr(d.website_sales || new Array(d.weeks.length).fill(0), fl);
+  const regN  = scaleArr(d.regional_new, fl);
+  const regU  = scaleArr(d.regional_used, fl);
+
+  const fmt = v => Math.round(v);
+
+  document.getElementById('sales-desc').textContent =
+    `R2B orders · rentals · hub performance — week of ${latestLong}`;
+  document.getElementById('sales-insight-title').textContent =
+    `Sales — ${fleetView.label} — week of ${latestShort}`;
+
+  document.getElementById('sales-insight').innerHTML =
+    `<strong>${fmt(nr2b[cur])} new R2B + ${fmt(ur2b[cur])} used R2B</strong> group-wide. Web sales: <strong>${fmt(ws[cur])}</strong>. Net rentals <strong>${netnr[cur]>=0?'+':''}${fmt(netnr[cur])}</strong>${netnr[cur]<0?' — negative flow':' — positive flow'}. Rentals out: <strong>${fmt(ro[cur])}</strong> vs in: <strong>${fmt(ri[cur])}</strong>. In-service rentals out: <strong>${fmt(isr[cur])}</strong>. Available: <strong>${fmt(av[cur])}</strong> (Kings Mall: ${fmt(km[cur])}). Avg days off road: <strong>${d.avg_days_offroad[cur]}</strong>.`;
+
+  // ── KPI cards — swap "available vehicles" for "in-service rentals" ──
+  document.getElementById('sales-stats').innerHTML =
+    statCard('New R2B orders', nr2b[cur], nr2b[prev]) +
+    statCard('Used R2B orders', ur2b[cur], ur2b[prev], '', 'pa') +
+    statCard('Web sales', ws[cur], ws[prev], '', 'pa') +
+    statCard('Rentals out', ro[cur], ro[prev]) +
+    statCard('Rentals in', ri[cur], ri[prev], '', '', {inverseDelta:true}) +
+    statCard('Net rentals', netnr[cur], netnr[prev], '', netnr[cur]>=0?'green':'da') +
+    statCard('Net R2B', netr2b[cur], netr2b[prev], '', netr2b[cur]>=0?'green':'da') +
+    statCard('In-service rentals out', isr[cur], isr[prev], '', 'pa', {inverseDelta:true});
+
+  // ── R2B trend (unchanged) ──
+  mkChart('c-sales-r2b','line',wk,[
+    {label:'New R2B', data:nr2b, borderColor:P, backgroundColor:'rgba(35,15,88,0.07)', fill:true,  tension:.4, pointRadius:3},
+    {label:'Used R2B',data:ur2b, borderColor:G, borderDash:[5,3], borderWidth:2, tension:.4, pointRadius:0, fill:false},
+  ],{plugins:{legend:mkLegend(),tooltip:TT}});
+
+  // ── Rentals out by manufacturer — this week ──
+  const makes   = Object.keys(d.makes_in_service);
+  const makeVals= makes.map(m => fleetScale(d.makes_in_service[m][cur], fl));
+  const makeCols= makes.map((_,i)=>PAL[i%PAL.length]);
+  mkChart('c-sales-rentals-make','bar',makes,[
+    {label:'Vehicles',data:makeVals,backgroundColor:makeCols,borderRadius:4}
+  ],{plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── Big net trends line chart ──
+  // Net used R2B = used R2B total minus R2B collections (returns)
+  // Net new R2B = new R2B total minus cancellations (approx = total_r2b_new - r2b_collections * ratio)
+  // Using available series: net_rentals, net_r2b, regional_new, regional_used
+  // For net new/used R2B separately: london_new - returns proportion, etc. 
+  // Simplest accurate derivation from the data:
+  const netUsedR2B = scaleArr(d.london_used, fl);  // London used R2B orders (net proxy)
+  const netNewR2B  = scaleArr(d.london_new,  fl);  // London new R2B orders
+  const netRegNew  = scaleArr(d.regional_new, fl);
+  const netRegUsed = scaleArr(d.regional_used, fl);
+
+  function netDataset(label, arr, baseColor, dash=[]) {
+    return {
+      label, data:arr,
+      borderColor: baseColor,
+      backgroundColor:'transparent',
+      tension:.4, fill:false, pointRadius:4,
+      pointBackgroundColor:baseColor,
+      pointBorderColor:'#fff', pointBorderWidth:2,
+      borderDash:dash, borderWidth:2,
+    };
+  }
+  mkChart('c-sales-net-trends','line',wk,[
+    netDataset('Net rentals',       netnr,      P,         []),
+    netDataset('Net used R2B',      netUsedR2B, G,         [5,3]),
+    netDataset('Net new R2B',       netNewR2B,  '#f59e0b', [2,2]),
+    netDataset('Regional new R2B',  netRegNew,  '#5e3f8e', [5,3]),
+    netDataset('Regional used R2B', netRegUsed, '#1D9E75', [3,1]),
+  ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── Hub charts ──
+  renderHubChart();
+  renderRegionalHubChart();
+
+  // ── In-service rentals trend ──
+  mkChart('c-sales-isr','line',wk,[
+    {label:'ISR out',data:isr,borderColor:P,backgroundColor:'rgba(35,15,88,.07)',fill:true,tension:.4,pointRadius:3}
+  ]);
+
+  // ── Available vehicles KPI cards ──
+  document.getElementById('sales-avail-stats').innerHTML =
+    statCard('Available vehicles', av[cur], av[prev]) +
+    statCard('Kings Mall available', km[cur], km[prev], '', 'pa') +
+    statCard('Avg days off road', d.avg_days_offroad[cur], d.avg_days_offroad[prev]);
+
+  // ── Available vehicles + Kings Mall two-line chart ──
+  mkChart('c-sales-avail','line',wk,[
+    {label:'Group available', data:av, borderColor:P, backgroundColor:'rgba(35,15,88,.07)', fill:true, tension:.4, pointRadius:3},
+    {label:'Kings Mall',      data:km, borderColor:G, borderDash:[5,3], borderWidth:2,       fill:false,tension:.4, pointRadius:3},
+  ],{plugins:{legend:mkLegend(),tooltip:TT}});
+}
+
+function renderHubChart() {
+  const d = salesDataForCurrentFleet(); const fl = 'all';
+  const cur=d.weeks.length-1, prevIdx=Math.max(0, cur-1);
+  const hubs = Object.keys(d.hubs);
+  const hub = d.hubs[selectedLondonHub] ? selectedLondonHub : hubs[0];
+  selectedLondonHub = hub;
+  const products = [
+    {key:'rentals_out', label:'Rentals out', color:P},
+    {key:'new_r2b', label:'New R2B', color:G},
+    {key:'used_r2b', label:'Used R2B', color:LBLUE},
+    {key:'rentals_in', label:'Rentals in', color:AMBER}
+  ];
+  const vals = products.map(p => fleetScale(d.hubs[hub][p.key][cur], fl));
+  const prev = products.map(p => fleetScale(d.hubs[hub][p.key][prevIdx], fl));
+  mkChart('c-sales-hubs','bar',products.map(p=>p.label),[
+    {label:'Latest week',data:vals,backgroundColor:products.map(p=>p.color),borderRadius:4},
+    {label:'Prev week',  data:prev,backgroundColor:'rgba(35,15,88,.18)',borderRadius:4}
+  ],{plugins:{legend:mkLegend(),tooltip:TT}});
+}
+
+function renderRegionalHubChart() {
+  const d = salesDataForCurrentFleet(); const fl = 'all';
+  const cur=d.weeks.length-1, prevIdx=Math.max(0, cur-1);
+  const hubs = Object.keys(d.regional_hubs);
+  const hub = d.regional_hubs[selectedRegionalHub] ? selectedRegionalHub : hubs[0];
+  selectedRegionalHub = hub;
+  const products = [
+    {key:'new_r2b', label:'New R2B', color:P},
+    {key:'used_r2b', label:'Used R2B', color:LBLUE},
+    {key:'returns', label:'R2B returns', color:'#1D9E75'}
+  ];
+  const vals = products.map(p => fleetScale(d.regional_hubs[hub][p.key][cur], fl));
+  const prev = products.map(p => fleetScale(d.regional_hubs[hub][p.key][prevIdx], fl));
+  mkChart('c-sales-regional-hubs','bar',products.map(p=>p.label),[
+    {label:'Latest week',data:vals,backgroundColor:products.map(p=>p.color),borderRadius:4},
+    {label:'Prev week',  data:prev,backgroundColor:'rgba(35,15,88,.18)',borderRadius:4}
+  ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10},stepSize:1}}}});
+}
+
+function renderFreshdesk() {
+  const d = DATA.freshdesk; 
+  const fl = 'all'; // Always use 'all' fleet for Freshdesk
+  const wk = weekLabels(d.weeks);
+  const cur=5, prev=4;
+  const recv = scaleArr(d.received, fl);
+  const open = scaleArr(d.total_open, fl);
+  const ovd  = scaleArr(d.overdue, fl);
+  const fcr  = d.fcr;
+
+  // ── INSIGHT ──
+  document.getElementById('fd-insight').innerHTML =
+    `<strong>${Math.round(recv[cur]).toLocaleString()} tickets received</strong> this week. <strong>${Math.round(open[cur])} open</strong> · <strong>${Math.round(ovd[cur])} overdue</strong>. Avg first response: <strong>${d.avg_first_response_hrs[cur]}h</strong>. Avg resolution: <strong>${d.avg_resolution_hrs[cur]}h</strong>. FCR: <strong>${(fcr[cur]*100).toFixed(1)}%</strong>.`;
+
+  // ── KPI BOXES: received, open, overdue, avg first response, avg resolution, FCR ──
+  document.getElementById('fd-stats').innerHTML =
+    statCard('Tickets received', recv[cur], recv[prev], '', 'pa') +
+    statCard('Open tickets', open[cur], open[prev]) +
+    statCard('Overdue tickets', ovd[cur], ovd[prev], '', ovd[cur]>120?'da':'wa') +
+    statCard('Avg first response', d.avg_first_response_hrs[cur], d.avg_first_response_hrs[prev], ' hrs', d.avg_first_response_hrs[cur]<=4?'green':'wa') +
+    statCard('Avg resolution', d.avg_resolution_hrs[cur], d.avg_resolution_hrs[prev], ' hrs', d.avg_resolution_hrs[cur]<=28?'green':'wa') +
+    statCard('FCR rate', fcr[cur], fcr[prev], '%', fcr[cur]>=0.75?'green':'wa');
+
+  // ── LINE CHART: received (purple) vs overdue (red) ──
+  mkChart('c-fd-vol','line',wk,[
+    {label:'Tickets received', data:recv, borderColor:P, backgroundColor:'rgba(35,15,88,.07)', fill:true, tension:.4, pointRadius:4, pointBackgroundColor:P, pointBorderColor:'#fff', pointBorderWidth:2},
+    {label:'Overdue tickets',  data:ovd,  borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.07)', fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#ef4444', pointBorderColor:'#fff', pointBorderWidth:2},
+  ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── OVERDUE BY DEPT ──
+  const depts = Object.keys(d.overdue_by_dept);
+  const deptVals = depts.map(k => d.overdue_by_dept[k]);
+  const totalOverdue = deptVals.reduce((a,b)=>a+b,0);
+  document.getElementById('fd-overdue-total-badge').textContent = totalOverdue + ' total overdue';
+
+  // Dept mini cards
+  const deptColors = ['#230f58','#ef4444','#5e3f8e','#f59e0b','#1D9E75','#b8a8d9','#31be2a','#4d616e','#7c5cbf','#a8c5cc','#88d985','#56c553','#e07b39','#314049','#37d32f'];
+  const maxDeptVal = Math.max(...deptVals, 1);
+  document.getElementById('fd-overdue-dept-grid').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem;margin-bottom:.5rem">' +
+    depts.map((dept, i) => {
+      const v = deptVals[i];
+      const pct = Math.round((v / maxDeptVal) * 100);
+      const share = totalOverdue > 0 ? (v/totalOverdue*100).toFixed(1) : '0.0';
+      return `<div style="background:var(--purple10);border-radius:8px;padding:.85rem 1rem">
+        <div style="font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--grey80);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dept}</div>
+        <div style="display:flex;align-items:baseline;gap:.35rem;margin-bottom:.35rem">
+          <span style="font-size:1.25rem;font-weight:700;font-family:'DM Mono',monospace;color:${deptColors[i%deptColors.length]};line-height:1">${v}</span>
+          <span style="font-size:.65rem;font-family:'DM Mono',monospace;color:var(--grey80)">${share}%</span>
+        </div>
+        <div style="height:4px;background:rgba(35,15,88,.12);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${deptColors[i%deptColors.length]};border-radius:2px"></div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+
+  // Dept horizontal bar chart
+  mkChart('c-fd-overdue-dept','bar',depts,[
+    {label:'Overdue tickets', data:deptVals, backgroundColor:depts.map((_,i)=>deptColors[i%deptColors.length]), borderRadius:4}
+  ],{indexAxis:'y',plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}},beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:10}}}}});
+}
+
+function renderCalls() {
+  const d = DATA.calls; 
+  const fl = 'all'; // Always use 'all' fleet for Calls
+  const wk = weekLabels(d.weeks);
+  const cur=5, prev=4;
+  const payAns = d.payment.answered_pct;
+  const svcAns = d.servicing.answered_pct;
+  const telAns = d.telesales.answered_pct;
+  const enqAns = d.enquiries.answered_pct;
+
+  const totalCalls = d.payment.total.map((v,i)=>
+    fleetScale(v,fl)+fleetScale(d.servicing.total[i],fl)+fleetScale(d.telesales.total[i],fl)+fleetScale(d.enquiries.total[i],fl));
+  const totalAnswered = d.payment.answered.map((v,i)=>
+    fleetScale(v,fl)+fleetScale(d.servicing.answered[i],fl)+fleetScale(d.telesales.answered[i],fl)+fleetScale(d.enquiries.answered[i],fl));
+
+  document.getElementById('calls-insight').innerHTML =
+    `<strong>${Math.round(totalCalls[cur])} total calls</strong> this week, <strong>${Math.round(totalAnswered[cur])} answered</strong>. Payment answer rate <strong>${(payAns[cur]*100).toFixed(0)}%</strong>. Servicing answer <strong>${(svcAns[cur]*100).toFixed(0)}%</strong>${svcAns[cur]<0.9?' — below 90% target':''}. Telesales answer <strong>${(telAns[cur]*100).toFixed(0)}%</strong>. Enquiries answer <strong>${(enqAns[cur]*100).toFixed(0)}%</strong>.`;
+
+  // ── KPI BOXES: total calls, total answered, 4 dept answer % ──
+  document.getElementById('calls-stats').innerHTML =
+    statCard('Total calls', totalCalls[cur], totalCalls[prev]) +
+    statCard('Total answered', totalAnswered[cur], totalAnswered[prev], '', 'pa') +
+    statCard('Payment answer %', payAns[cur], payAns[prev], '%', payAns[cur]>=0.9?'green':'wa') +
+    statCard('Servicing answer %', svcAns[cur], svcAns[prev], '%', svcAns[cur]>=0.9?'green':'da') +
+    statCard('Telesales answer %', telAns[cur], telAns[prev], '%', telAns[cur]>=0.9?'green':'wa') +
+    statCard('Enquiries answer %', enqAns[cur], enqAns[prev], '%', enqAns[cur]>=0.9?'green':'wa');
+
+  // ── 4 LINE CHARTS: total vs answered per department ──
+  function deptLineChart(id, qdata) {
+    const total = scaleArr(qdata.total, fl);
+    const ans   = scaleArr(qdata.answered, fl);
+    mkChart(id,'line',wk,[
+      {label:'Total calls', data:total, borderColor:P, backgroundColor:'rgba(35,15,88,.08)', fill:true, tension:.4, pointRadius:4, pointBackgroundColor:P, pointBorderColor:'#fff', pointBorderWidth:2},
+      {label:'Answered',    data:ans,   borderColor:G, backgroundColor:'rgba(55,211,47,.08)', fill:true, tension:.4, pointRadius:4, pointBackgroundColor:G, pointBorderColor:'#fff', pointBorderWidth:2, borderDash:[5,3]},
+    ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+  }
+  deptLineChart('c-calls-pay', d.payment);
+  deptLineChart('c-calls-svc', d.servicing);
+  deptLineChart('c-calls-tel', d.telesales);
+  deptLineChart('c-calls-enq', d.enquiries);
+
+  // ── AVG WAIT TIME BAR CHART: 4 departments, different colours ──
+  const DEPT_COLORS = {payment:P, servicing:'#5e3f8e', telesales:AMBER, enquiries:'#1D9E75'};
+  mkChart('c-calls-wait','bar',wk,[
+    {label:'Payment',   data:d.payment.avg_wait,   backgroundColor:DEPT_COLORS.payment,   borderRadius:4},
+    {label:'Servicing', data:d.servicing.avg_wait,  backgroundColor:DEPT_COLORS.servicing,  borderRadius:4},
+    {label:'Telesales', data:d.telesales.avg_wait,  backgroundColor:DEPT_COLORS.telesales,  borderRadius:4},
+    {label:'Enquiries', data:d.enquiries.avg_wait,  backgroundColor:DEPT_COLORS.enquiries,  borderRadius:4},
+  ],{plugins:{legend:mkLegend(),tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw}s`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{callback:v=>v+'s',font:{size:10}}}}});
+}
+
+function renderClaims() {
+  const d = DATA.claims; const fl = currentFleet;
+  const wk = weekLabels(d.weeks);
+  const cur=3, prev=2;
+
+  function cv(arr){ return Math.round(fleetScale(arr[cur], fl)); }
+  function pv(arr){ return Math.round(fleetScale(arr[prev], fl)); }
+  function sv(arr){ return scaleArr(arr, fl); }
+
+  // pre-compute for insight
+  const faultR  = d.fault_ratio;
+  const nfaultR = d.non_fault_ratio;
+  const accR    = d.accident_fleet_ratio;
+  const roll4   = d.rolling_4wk_avg;
+  const tpiTotalCur = cv(d.tpi_non_faults)+cv(d.tpi_faults)+cv(d.tpi_no_intervention)+cv(d.tpi_captured);
+
+  // ── INSIGHT ──
+  document.getElementById('claims-insight').innerHTML =
+    `Fault ratio <strong>${(faultR[cur]*100).toFixed(1)}%</strong>${faultR[cur]>0.4?' — elevated':''}. Accident/fleet rate <strong>${(accR[cur]*100).toFixed(3)}%</strong> · 4-wk avg <strong>${(roll4[cur]*100).toFixed(3)}%</strong>. Vehicles on site: <strong>${cv(d.total_vehicles)}</strong> (A2Z: ${cv(d.a2z)}, Long Lane: ${cv(d.longlane)}). In repair: <strong>${cv(d.in_repair)}</strong> · ready to collect: <strong>${cv(d.ready_to_collect)}</strong>. <strong>${cv(d.total_claims_handled)} claims assessed</strong>. <strong>${tpiTotalCur} third party interventions</strong>: ${cv(d.tpi_faults)} faults, ${cv(d.tpi_non_faults)} non-faults, ${cv(d.tpi_captured)} captured.`;
+
+  // ── 1. RATIOS (top of page) ──
+  document.getElementById('claims-ratio-stats').innerHTML =
+    statCard('Fault ratio', faultR[cur], faultR[prev], '%', faultR[cur]>0.4?'da':'wa') +
+    statCard('Non-fault ratio', nfaultR[cur], nfaultR[prev], '%', 'green') +
+    statCard('Accidents / fleet size', accR[cur], accR[prev], '%') +
+    statCard('4-week rolling avg', roll4[cur], roll4[prev], '%') +
+    statCard('Fleet size', d.fleet_size[cur], d.fleet_size[prev]);
+
+  // ── 2. VEHICLES ONSITE ──
+  const a2z = sv(d.a2z);
+  const ll  = sv(d.longlane);
+  const tot = sv(d.total_vehicles);
+  document.getElementById('cl-onsite-total-badge').textContent = cv(d.total_vehicles)+' total';
+  document.getElementById('claims-onsite-stats').innerHTML =
+    statCard('Total on site', cv(d.total_vehicles), pv(d.total_vehicles)) +
+    statCard('A2Z', cv(d.a2z), pv(d.a2z), '', 'pa') +
+    statCard('Long Lane / Aktrion', cv(d.longlane), pv(d.longlane));
+
+  // stacked bar A2Z vs Long Lane
+  mkChart('c-claims-onsite-trend','bar',wk,[
+    {label:'A2Z',               data:a2z, backgroundColor:P, stack:'o', borderRadius:0},
+    {label:'Long Lane/Aktrion', data:ll,  backgroundColor:G, stack:'o', borderRadius:4},
+  ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── 3. ONSITE BREAKDOWN BY REASON ──
+  const reasons = [
+    {key:'claims_related',        label:'Claims related',          color:P},
+    {key:'non_claims',            label:'Non-claims related',      color:'#5e3f8e'},
+    {key:'scrap',                 label:'Scrap / non-repairable',  color:'#ef4444'},
+    {key:'new_jobs',              label:'New jobs',                color:'#f59e0b'},
+    {key:'in_repair',             label:'In repair',               color:'#b8a8d9'},
+    {key:'ready_to_collect',      label:'Ready to collect',        color:G},
+    {key:'courtesy',              label:'Courtesy / replacement',  color:'#88d985'},
+    {key:'awaiting_parts_lt10',   label:'Awaiting parts <10 days', color:'#a8c5cc'},
+    {key:'backorder_parts_10plus',label:'Back order 10 days+',     color:'#4d616e'},
+  ];
+
+  const maxVal = Math.max(...reasons.map(r=>cv(d[r.key])||0), 1);
+  document.getElementById('claims-reason-grid').innerHTML =
+    '<div class="reason-grid">' +
+    reasons.map(r=>{
+      const curV = cv(d[r.key]);
+      const prvV = pv(d[r.key]);
+      const pct  = Math.round((curV/maxVal)*100);
+      const dlt  = curV - prvV;
+      const dltTxt = dlt===0?'stable':dlt>0?`↑${dlt} vs prev`:`↓${Math.abs(dlt)} vs prev`;
+      const bad = r.key==='claims_related'||r.key==='scrap'||r.key==='in_repair';
+      const dltCol = dlt===0?'color:var(--grey)':( (bad&&dlt>0)||(!bad&&dlt<0) ?'color:#ef4444':'color:var(--success)');
+      return `<div class="reason-card">
+        <div class="reason-bar-col">
+          <div class="reason-name">${r.label}</div>
+          <div class="reason-vals">
+            <span class="reason-cur">${curV}</span>
+            <span class="reason-prev" style="${dltCol}">${dltTxt}</span>
+          </div>
+          <div class="reason-mini-bar"><div class="reason-mini-fill" style="width:${pct}%;background:${r.color}"></div></div>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+
+  // donut — current week composition
+  mkChart('c-claims-reasons-donut','doughnut',reasons.map(r=>r.label),[
+    {data:reasons.map(r=>cv(d[r.key])), backgroundColor:reasons.map(r=>r.color), borderWidth:2, borderColor:'#fff', hoverOffset:6}
+  ],{plugins:{legend:{display:true,position:'right',labels:{boxWidth:10,font:{size:9},color:'#314049'}},tooltip:TT}});
+
+  // line chart — total vehicles on site 4-week trend
+  mkChart('c-claims-onsite-total-trend','line',wk,[
+    {label:'Total on site', data:tot, borderColor:P, backgroundColor:'rgba(35,15,88,.07)', fill:true, tension:.4, pointRadius:5, pointBackgroundColor:P, pointBorderColor:'#fff', pointBorderWidth:2}
+  ],{plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── 4. CLAIMS ASSESSED ──
+  const flt      = sv(d.fault);
+  const nflt     = sv(d.non_fault);
+  const totalHdl = sv(d.total_claims_handled);
+
+  document.getElementById('cl-assessed-total-badge').textContent = cv(d.total_claims_handled)+' assessed';
+  document.getElementById('claims-assessed-stats').innerHTML =
+    statCard('Fault', cv(d.fault), pv(d.fault), '', cv(d.fault)>20?'da':'wa') +
+    statCard('Non fault', cv(d.non_fault), pv(d.non_fault), '', 'green') +
+    statCard('50/50', cv(d.fifty_fifty), pv(d.fifty_fifty)) +
+    statCard('Glass', cv(d.glass), pv(d.glass)) +
+    statCard('No TP / non event / hit & run', cv(d.no_tp_non_event), pv(d.no_tp_non_event)) +
+    statCard('Liability to assess', cv(d.liability_to_assess), pv(d.liability_to_assess), '', cv(d.liability_to_assess)>0?'wa':'') +
+    statCard('Stolen', cv(d.stolen), pv(d.stolen), '', cv(d.stolen)>0?'wa':'');
+
+  const assessedLabels = ['Fault','Non fault','50/50','Glass','No TP/Non event','Liability to assess','Stolen'];
+  const assessedVals   = [cv(d.fault),cv(d.non_fault),cv(d.fifty_fifty),cv(d.glass),cv(d.no_tp_non_event),cv(d.liability_to_assess),cv(d.stolen)];
+  const assessedColors = ['#ef4444',G,'#f59e0b','#b8a8d9',P,LBLUE,'#4d616e'];
+  mkChart('c-claims-assessed-bar','bar',assessedLabels,[
+    {label:'Claims', data:assessedVals, backgroundColor:assessedColors, borderRadius:5}
+  ],{plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:35}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  mkChart('c-claims-fault-trend','line',wk,[
+    {label:'Fault',     data:flt,      borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.07)', fill:true,  tension:.4, pointRadius:3},
+    {label:'Non fault', data:nflt,     borderColor:G,         backgroundColor:'rgba(55,211,47,.07)',  fill:false, tension:.4, pointRadius:3, borderDash:[5,3]},
+    {label:'Total',     data:totalHdl, borderColor:'rgba(35,15,88,.4)', backgroundColor:'transparent', fill:false, tension:.4, pointRadius:3, borderDash:[2,2]},
+  ],{plugins:{legend:mkLegend(),tooltip:TT}});
+
+  // ── 5. THIRD PARTY INTERVENTIONS ──
+  const tpiNF  = sv(d.tpi_non_faults);
+  const tpiF   = sv(d.tpi_faults);
+  const tpiNI  = sv(d.tpi_no_intervention);
+  const tpiCap = sv(d.tpi_captured);
+
+  document.getElementById('cl-tpi-total-badge').textContent = tpiTotalCur+' total';
+  document.getElementById('claims-tpi-stats').innerHTML =
+    statCard('Non faults', cv(d.tpi_non_faults), pv(d.tpi_non_faults), '', 'green') +
+    statCard('Faults', cv(d.tpi_faults), pv(d.tpi_faults), '', cv(d.tpi_faults)>15?'wa':'') +
+    statCard('No intervention required', cv(d.tpi_no_intervention), pv(d.tpi_no_intervention)) +
+    statCard('Interventions captured', cv(d.tpi_captured), pv(d.tpi_captured), '', 'pa');
+
+  // line chart — 4 types over 4 weeks
+  mkChart('c-claims-tpi-trend','line',wk,[
+    {label:'Non faults',           data:tpiNF,  borderColor:G,                    backgroundColor:'rgba(55,211,47,.07)',   fill:true,  tension:.4, pointRadius:4, pointBackgroundColor:G,                    pointBorderColor:'#fff', pointBorderWidth:2},
+    {label:'Faults',               data:tpiF,   borderColor:'#ef4444',             backgroundColor:'rgba(239,68,68,.07)',   fill:false, tension:.4, pointRadius:4, pointBackgroundColor:'#ef4444',            pointBorderColor:'#fff', pointBorderWidth:2},
+    {label:'No intervention req.', data:tpiNI,  borderColor:'rgba(35,15,88,.5)',   backgroundColor:'transparent',           fill:false, tension:.4, pointRadius:4, pointBackgroundColor:'rgba(35,15,88,.5)', pointBorderColor:'#fff', pointBorderWidth:2, borderDash:[5,3]},
+    {label:'Captured',             data:tpiCap, borderColor:P,                     backgroundColor:'transparent',           fill:false, tension:.4, pointRadius:4, pointBackgroundColor:P,                    pointBorderColor:'#fff', pointBorderWidth:2, borderDash:[2,2]},
+  ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}},beginAtZero:true}}});
+}
+
+function renderServicing() {
+  const d = DATA.servicing; const fl = currentFleet;
+  const wk = weekLabels(d.weeks);
+  const cur=3, prev=2;
+  const cnt      = scaleArr(d.count_in_servicing, fl);
+  const fleet_n  = scaleArr(d.fleet_number, fl);
+  const pct      = d.pct_in_servicing;
+  const avgDays  = d.avg_days_offroad;
+
+  // ── INSIGHT ──
+  document.getElementById('svc-insight').innerHTML =
+    `Fleet number <strong>${Math.round(fleet_n[cur]).toLocaleString()}</strong>. <strong>${Math.round(cnt[cur])} vehicles in servicing</strong> (${(pct[cur]*100).toFixed(1)}% of fleet). Avg days off road: <strong>${avgDays[cur]} days</strong>${avgDays[cur]>15?' — above target':''}.`;
+
+  // ── KPI BOXES: in-servicing count, % of fleet, avg days off road only ──
+  document.getElementById('svc-stats').innerHTML =
+    statCard('In servicing', cnt[cur], cnt[prev], '', 'pa') +
+    statCard('% of fleet', pct[cur], pct[prev], '%', pct[cur]<=0.025?'green':'wa') +
+    statCard('Avg days off road', avgDays[cur], avgDays[prev], ' hrs', avgDays[cur]<=15?'green':'wa');
+
+  // ── TREND LINE ──
+  mkChart('c-svc-trend','line',wk,[
+    {label:'In servicing',data:cnt,borderColor:P,backgroundColor:'rgba(35,15,88,0.07)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:P,pointBorderColor:'#fff',pointBorderWidth:2}
+  ],{plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:false,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── BY MAKE BAR ──
+  const makes = Object.keys(d.makes);
+  const makeVals = makes.map(m => fleetScale(d.makes[m][cur], fl));
+  mkChart('c-svc-makes','bar',makes,[
+    {label:'In servicing',data:makeVals,backgroundColor:makes.map((_,i)=>PAL[i%PAL.length]),borderRadius:4}
+  ],{plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{maxRotation:30,font:{size:10}}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── STATUS BREAKDOWN ──
+  const statuses = [
+    { key:'northfields_yard',           label:'Northfields Yard',           color:'#230f58' },
+    { key:'pending_workshop',           label:'Pending Workshop',           color:'#5e3f8e' },
+    { key:'available_courtesy',         label:'Available Courtesy',         color:'#37d32f' },
+    { key:'awaiting_customer_collection',label:'Awaiting Customer Collection',color:'#1D9E75'},
+    { key:'panel_work_required',        label:'Panel Work Required',        color:'#f59e0b' },
+    { key:'ready_for_sales',            label:'Ready for Sales',            color:'#31be2a' },
+    { key:'other',                      label:'Other',                      color:'#4d616e' },
+    { key:'waiting_phv_date',           label:'Waiting for PHV Date',       color:'#b8a8d9' },
+  ];
+
+  const statusVals  = statuses.map(s => Math.round(fleetScale(d[s.key][cur], fl)));
+  const statusTotal = statusVals.reduce((a,b)=>a+b, 0);
+  const maxStatusVal = Math.max(...statusVals, 1);
+
+  document.getElementById('svc-status-total-badge').textContent = statusTotal + ' total';
+
+  // Mini status cards
+  document.getElementById('svc-status-cards').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem">' +
+    statuses.map((s, i) => {
+      const v   = statusVals[i];
+      const pv  = Math.round(fleetScale(d[s.key][prev], fl));
+      const pct = statusTotal > 0 ? (v/statusTotal*100).toFixed(1) : '0.0';
+      const bar = Math.round((v/maxStatusVal)*100);
+      const dlt = v - pv;
+      const dltTxt = dlt === 0 ? 'stable' : dlt > 0 ? `↑${dlt} vs prev` : `↓${Math.abs(dlt)} vs prev`;
+      const dltCol = dlt === 0 ? 'color:var(--grey)' : dlt > 0 ? 'color:var(--danger)' : 'color:var(--success)';
+      return `<div style="background:var(--purple10);border-radius:8px;padding:.85rem 1rem">
+        <div style="font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--grey80);margin-bottom:.3rem;line-height:1.3">${s.label}</div>
+        <div style="display:flex;align-items:baseline;gap:.4rem;margin-bottom:.35rem">
+          <span style="font-size:1.35rem;font-weight:700;font-family:'DM Mono',monospace;color:${s.color};line-height:1">${v}</span>
+          <span style="font-size:.65rem;font-family:'DM Mono',monospace;color:var(--grey80)">${pct}%</span>
+          <span style="font-size:.62rem;font-family:'DM Mono',monospace;${dltCol};margin-left:auto">${dltTxt}</span>
+        </div>
+        <div style="height:4px;background:rgba(35,15,88,.12);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${bar}%;background:${s.color};border-radius:2px"></div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+
+  // Donut chart
+  if(charts['c-svc-status-donut']) charts['c-svc-status-donut'].destroy();
+  const dCtx = document.getElementById('c-svc-status-donut').getContext('2d');
+  charts['c-svc-status-donut'] = new Chart(dCtx, {
+    type:'doughnut',
+    data:{ labels:statuses.map(s=>s.label), datasets:[{ data:statusVals, backgroundColor:statuses.map(s=>s.color), borderWidth:2, borderColor:'#fff', hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:true, position:'right', labels:{boxWidth:10,font:{size:9},color:'#314049'} }, tooltip:TT } }
+  });
+
+  // Horizontal bar chart
+  mkChart('c-svc-status','bar',statuses.map(s=>s.label),[
+    {label:'Vehicles', data:statusVals, backgroundColor:statuses.map(s=>s.color), borderRadius:4}
+  ],{indexAxis:'y',plugins:{legend:{display:false},tooltip:TT},scales:{x:{beginAtZero:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:9},color:'#314049'}}}});
+}
+
+function renderCredit() {
+  const d = DATA.creditcontrol;
+  const n = d.weeks.length;
+  const cur = n - 1;
+  const prev = n - 2;
+
+  // Week labels
+  const wkLabels = d.weeks.map(w => {
+    const dt = new Date(w);
+    return dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short'});
+  });
+
+  // === INSIGHT BANNER ===
+  const arrT = d.arrears_total;
+  const paid = d.paid_invoice_pct;
+  const pct4p = d.over4wk_pct;
+  const wk1 = d.week1_arrears;
+  const writeOff = d.write_offs_total;
+  const writeOffIncrease = writeOff[cur] - writeOff[0];
+  const totalRepos = d.repos_requested.reduce((a,b)=>a+b,0);
+  document.getElementById('cc-insight').innerHTML = `Total active arrears <strong>£${Math.round(arrT[cur]).toLocaleString()}</strong>${arrT[cur]<arrT[prev]?' ↓ improving':' ↑ up wk/wk'}. Same-week paid <strong>${(paid[cur]*100).toFixed(2)}%</strong>. 4-week collection <strong>${(d.four_week_collection[cur]*100).toFixed(2)}%</strong>. 4+ week overdue <strong>${(pct4p[cur]*100).toFixed(2)}%</strong> vs 7% KPI. Write-offs increased <strong>£${Math.round(writeOffIncrease).toLocaleString()}</strong> since Jan 24.`;
+
+  // === KEY KPI BOXES ===
+  function kpiBox(label, val, sub, cls='') {
+    return `<div class="kpi ${cls}"><div class="kpi-label">${label}</div><div class="kpi-val sm">${val}</div><div class="kpi-delta">${sub}</div></div>`;
+  }
+  const totalSubs = (d.r2b[cur]||0)+(d.r2b_van[cur]||0)+(d.short_term_rental[cur]||0)+(d.aftercare[cur]||0)+(d.dashcam[cur]||0)+(d.pco_flex[cur]||0);
+  document.getElementById('cc-stats').innerHTML =
+    kpiBox('Paid Invoice %', (paid[cur]*100).toFixed(2)+'%', 'Same-week collection', paid[cur]>=0.95?'':'wa') +
+    kpiBox('4-Week Collection %', (d.four_week_collection[cur]*100).toFixed(2)+'%', 'Lagged 4-week rate', '') +
+    kpiBox('Write-Off Increase', '£'+Math.round(writeOffIncrease).toLocaleString(), 'vs 5 Jan 2024 baseline', 'da') +
+    kpiBox('Total Repos (12wk)', totalRepos, d.repos_requested.join(', '), 'wa') +
+    kpiBox('Total Clamped Veh.', 'N/A', 'Data not in source', '');
+
+  // === LIVE SUBSCRIPTIONS TABLE ===
+  const subsRows = [
+    { name: 'Aftercare', key: 'aftercare', color: '#6366f1' },
+    { name: 'R2B', key: 'r2b', color: '#230f58' },
+    { name: 'R2B Van', key: 'r2b_van', color: '#5e3f8e' },
+    { name: 'Short Term Rental', key: 'short_term_rental', color: '#37d32f' },
+    { name: 'PCO Car Hire Flex', key: 'pco_flex', color: '#f59e0b' },
+    { name: 'DashCam', key: 'dashcam', color: '#06b6d4' },
+  ];
+  const last4 = [n-4, n-3, n-2, n-1];
+  const last4Labels = last4.map(i => wkLabels[i]);
+
+  // Update badge
+  document.getElementById('cc-total-subs-badge').textContent = totalSubs.toLocaleString() + ' total subs';
+
+  const tbody = document.getElementById('cc-subs-tbody');
+  const tfoot = document.getElementById('cc-subs-tfoot');
+  
+  let tbodyHtml = '';
+  let footTotals = [0,0,0,0];
+  subsRows.forEach((row, ri) => {
+    const vals = last4.map(i => d[row.key][i] || 0);
+    vals.forEach((v,i) => footTotals[i] += v);
+    const trend = vals[3] - vals[0];
+    const trendStr = trend > 0 ? `<span style="color:var(--green90)">+${trend}</span>` : trend < 0 ? `<span style="color:var(--danger)">${trend}</span>` : `<span style="color:var(--grey)">—</span>`;
+    const isEven = ri % 2 === 0;
+    tbodyHtml += `<tr style="border-bottom:1px solid var(--border);${isEven?'background:var(--purple10)':''}">
+      <td style="padding:10px 14px;font-weight:600;display:flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:2px;background:${row.color};flex-shrink:0;display:inline-block"></span>${row.name}
+      </td>
+      ${vals.map(v=>`<td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace">${v.toLocaleString()}</td>`).join('')}
+      <td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace">${trendStr}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = tbodyHtml;
+  tfoot.innerHTML = `<tr style="border-top:2px solid var(--border);background:var(--purple);color:#fff">
+    <td style="padding:10px 14px;font-weight:700;color:#fff">Total</td>
+    ${footTotals.map(v=>`<td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace;color:#fff;font-weight:700">${v.toLocaleString()}</td>`).join('')}
+    <td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace;color:var(--green);font-weight:700">${footTotals[3]>footTotals[0]?'+':''}${(footTotals[3]-footTotals[0]).toLocaleString()}</td>
+  </tr>`;
+
+  // === TOTAL ARREARS 4-WEEK LINE CHART ===
+  document.getElementById('cc-arrears-badge').textContent = '£' + Math.round(arrT[cur]).toLocaleString();
+  
+  // Destroy existing chart if any
+  if (window._ccArrChart) { window._ccArrChart.destroy(); }
+  const ctx = document.getElementById('c-cc-arrears').getContext('2d');
+  window._ccArrChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: wkLabels,
+      datasets: [
+        {
+          label: 'Total Arrears £',
+          data: arrT,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.08)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          borderWidth: 2
+        },
+        {
+          label: 'Week 1 Arrears £',
+          data: wk1,
+          borderColor: '#230f58',
+          backgroundColor: 'rgba(35,15,88,0.0)',
+          fill: false,
+          tension: 0.4,
+          pointRadius: 3,
+          borderWidth: 1.5,
+          borderDash: [4,3]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { boxWidth: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ' £' + Math.round(ctx.raw).toLocaleString() } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: 'rgba(35,15,88,.06)' }, ticks: { callback: v => '£'+Math.round(v/1000)+'k', font: { size: 10 } } }
+      }
+    }
+  });
+
+  // === ARREARS PROFILE TABLE & CHART ===
+  window._ccFleetData = d.fleet_arrears;
+  window._ccProfileChart = null;
+  showArrearFleet('overall', document.querySelector('#cc-fleet-tabs .tab-btn'));
+
+  // === FULL DATA TABLE ===
+  const allWeekLabels = d.weeks.map(w => {
+    const dt = new Date(w);
+    return dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short'});
+  });
+  const fullRows = [
+    { label: 'Same-Week Collection', key: 'paid_invoice_pct', fmt: v => (v*100).toFixed(2)+'%' },
+    { label: '4-Week Collection', key: 'four_week_collection', fmt: v => (v*100).toFixed(2)+'%' },
+    { label: 'Week 1 Arrears £', key: 'week1_arrears', fmt: v => '£'+Math.round(v).toLocaleString() },
+    { label: 'Week 2 Arrears £', key: 'week2_arrears', fmt: v => '£'+Math.round(v).toLocaleString() },
+    { label: 'Week 3 Arrears £', key: 'week3_arrears', fmt: v => '£'+Math.round(v).toLocaleString() },
+    { label: 'Week 4 Arrears £', key: 'week4_arrears', fmt: v => '£'+Math.round(v).toLocaleString() },
+    { label: '4+ Week Overdue £', key: 'over4wk_arrears', fmt: v => '£'+Math.round(v).toLocaleString() },
+    { label: '4+ Week % (KPI 7%)', key: 'over4wk_pct', fmt: v => (v*100).toFixed(2)+'%' },
+    { label: 'Total Arrears £', key: 'arrears_total', fmt: v => '£'+Math.round(v).toLocaleString() },
+    { label: 'Total Write-Offs £', key: 'write_offs_total', fmt: v => '£'+Math.round(v).toLocaleString() },
+    { label: 'R2B', key: 'r2b', fmt: v => v },
+    { label: 'Short Term Rental', key: 'short_term_rental', fmt: v => v },
+    { label: 'Aftercare Total', key: 'aftercare', fmt: v => v },
+    { label: 'Repos Requested', key: 'repos_requested', fmt: v => v },
+  ];
+
+  const thead = document.getElementById('cc-full-thead');
+  thead.innerHTML = `<tr style="border-bottom:2px solid var(--border)">
+    <th style="text-align:left;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey80);font-weight:700;white-space:nowrap">Metric</th>
+    ${allWeekLabels.map(l=>`<th style="text-align:right;padding:10px 14px;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--purple);font-weight:700;white-space:nowrap">${l}</th>`).join('')}
+  </tr>`;
+
+  const ftbody = document.getElementById('cc-full-tbody');
+  const kpiRows = ['4+ Week % (KPI 7%)'];
+  ftbody.innerHTML = fullRows.map((row, ri) => {
+    const vals = d[row.key] || [];
+    const isKpi = kpiRows.includes(row.label);
+    return `<tr style="border-bottom:1px solid var(--border);${ri%2===0?'background:var(--purple10)':''}">
+      <td style="padding:10px 14px;font-weight:600;white-space:nowrap">${row.label}</td>
+      ${vals.map((v,i) => {
+        let cellStyle = 'text-align:right;padding:10px 14px;font-family:"DM Mono",monospace;';
+        if (isKpi && v > 0.07) cellStyle += 'color:var(--danger);font-weight:700;';
+        return `<td style="${cellStyle}">${row.fmt(v)}</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+}
+
+function showArrearFleet(fleet, el) {
+  // Update tab buttons
+  document.querySelectorAll('#cc-fleet-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  const fd = window._ccFleetData;
+  if (!fd || !fd[fleet]) return;
+  const data = fd[fleet];
+  const buckets = ['Week 1', 'Week 2', 'Week 3', 'Week 4', '4+ Weeks'];
+  const amounts = [data.week1, data.week2, data.week3, data.week4, data.week4p];
+  const total = amounts.reduce((a,b)=>a+b, 0);
+  const colors = ['#230f58', 'rgba(35,15,88,.6)', 'rgba(35,15,88,.4)', '#f59e0b', '#ef4444'];
+  const kpiLabels = ['—','—','—','—','KPI: <7%'];
+
+  // Profile table
+  const tbody = document.getElementById('cc-arrears-profile-tbody');
+  const tfoot = document.getElementById('cc-arrears-profile-tfoot');
+  tbody.innerHTML = buckets.map((b, i) => {
+    const pct = total > 0 ? (amounts[i]/total*100).toFixed(1) : '0.0';
+    const barW = total > 0 ? (amounts[i]/total*100).toFixed(1) : 0;
+    const isOver = b === '4+ Weeks' && amounts[i]/total > 0.07;
+    return `<tr style="border-bottom:1px solid var(--border);${i%2===0?'background:var(--purple10)':''}">
+      <td style="padding:10px 14px;font-weight:600;display:flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0;display:inline-block"></span>${b}
+      </td>
+      <td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace;${isOver?'color:var(--danger);font-weight:700':''}">£${Math.round(amounts[i]).toLocaleString()}</td>
+      <td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace;${isOver?'color:var(--danger);font-weight:700':''}">  ${pct}%</td>
+      <td style="padding:10px 20px 10px 14px">
+        <div style="height:8px;background:var(--purple10);border-radius:4px;overflow:hidden;min-width:100px">
+          <div style="height:100%;width:${barW}%;background:${colors[i]};border-radius:4px;transition:width .4s"></div>
+        </div>
+      </td>
+      <td style="text-align:right;padding:10px 14px;font-size:.68rem;color:var(--grey80)">${isOver?'<span style="color:var(--danger);font-weight:700">⚠ Above KPI</span>':kpiLabels[i]}</td>
+    </tr>`;
+  }).join('');
+  tfoot.innerHTML = `<tr style="border-top:2px solid var(--border);background:var(--purple);color:#fff">
+    <td style="padding:10px 14px;font-weight:700;color:#fff">Total</td>
+    <td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace;color:#fff;font-weight:700">£${Math.round(total).toLocaleString()}</td>
+    <td style="text-align:right;padding:10px 14px;font-family:'DM Mono',monospace;color:#fff;font-weight:700">100%</td>
+    <td></td><td></td>
+  </tr>`;
+
+  // Profile bar chart
+  if (window._ccProfileChart) { window._ccProfileChart.destroy(); }
+  const ctx2 = document.getElementById('c-cc-profile-chart').getContext('2d');
+  window._ccProfileChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: buckets,
+      datasets: [{
+        label: 'Arrears £',
+        data: amounts,
+        backgroundColor: colors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' £' + Math.round(ctx.raw).toLocaleString() } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(35,15,88,.06)' }, ticks: { callback: v => '£'+Math.round(v/1000)+'k', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  el.classList.add('active');
+  currentSection = name;
+  
+  // Hide fleet bar for Freshdesk and Calls, show for all others
+  const fleetBar = document.getElementById('fleetBar');
+  if(name === 'freshdesk' || name === 'calls') {
+    fleetBar.classList.add('hidden');
+    // Reset to 'all' fleet for these sections
+    currentFleet = 'all';
+  } else {
+    fleetBar.classList.remove('hidden');
+  }
+  syncFleetUi();
+  
+  renderSection(name);
+}
+
+function renderSection(name) {
+  if(name==='ops') renderOps();
+  else if(name==='sales') renderSales();
+  else if(name==='freshdesk') renderFreshdesk();
+  else if(name==='calls') renderCalls();
+  else if(name==='claims') renderClaims();
+  else if(name==='servicing') renderServicing();
+  else if(name==='credit') renderCredit();
+}
+
+function setFleet(fleet, btn) {
+  currentFleet = fleet;
+  syncFleetUi();
+  renderSection(currentSection);
+}
+
+// ===== TABS =====
+function showTab(group, hub, btn) {
+  document.querySelectorAll(`#hub-tabs .tab-btn`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedLondonHub = hub;
+  renderHubChart();
+}
+
+function showRegionalTab(hub, btn) {
+  document.querySelectorAll(`#regional-hub-tabs .tab-btn`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedRegionalHub = hub;
+  renderRegionalHubChart();
+}
+
+// ===== GOOGLE SHEETS SALES DATA =====
+function num(value) {
+  if(value === '' || value === null || value === undefined) return 0;
+  if(value instanceof Date) return 0;
+  const cleaned = typeof value === 'string' ? value.replace(/,/g, '').trim() : value;
+  return Number(cleaned) || 0;
+}
+
+function sheetDate(value) {
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return String(value);
+  return d.toISOString().slice(0, 10);
+}
+
+function parseSheetDate(value) {
+  if(value instanceof Date) return value;
+  if(typeof value === 'number') {
+    // Google Sheets serial dates are days since 1899-12-30.
+    return new Date(Math.round((value - 25569) * 86400 * 1000));
+  }
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function col(rows, key) {
+  return rows.map(row => num(row[key]));
+}
+
+function transformSalesRows(rows) {
+  const sortedRows = (rows || [])
+    .filter(row => row && row.Date)
+    .map(row => ({...row, _parsedDate: parseSheetDate(row.Date)}))
+    .filter(row => row._parsedDate)
+    .sort((a, b) => a._parsedDate - b._parsedDate)
+    .slice(-6);
+
+  if(!sortedRows.length) return DATA.sales;
+
+  const sumCols = keys => sortedRows.map(row =>
+    keys.reduce((total, key) => total + num(row[key]), 0)
+  );
+
+  return {
+    weeks: sortedRows.map(row => sheetDate(row._parsedDate)),
+
+    total_r2b_new: col(sortedRows, 'new_r2b_orders'),
+    total_r2b_used: col(sortedRows, 'used_r2b_orders'),
+    rentals_out: col(sortedRows, 'rentals_out'),
+    rentals_in: col(sortedRows, 'rentals_in'),
+    website_sales: col(sortedRows, 'website_sales'),
+    net_rentals: col(sortedRows, 'net_rentals'),
+    net_r2b: col(sortedRows, 'net_r2b'),
+    available_vehicles: col(sortedRows, 'available_vehicles'),
+    kings_mall_avail: col(sortedRows, 'available_vehicles_kings_mall'),
+    avg_days_offroad: col(sortedRows, 'avg_days_off_road'),
+    isr_out: col(sortedRows, 'in_service_rentals_out'),
+
+    regional_new: sumCols(['new_r2b_cardiff', 'new_r2b_manchester', 'new_r2b_shah_manchester', 'new_r2b_birmingham']),
+    regional_used: sumCols(['used_r2b_cardiff', 'used_r2b_manchester', 'used_r2b_shah_manchester', 'used_r2b_birmingham']),
+    london_new: sumCols(['new_r2b_hammersmith', 'new_r2b_redbridge', 'new_r2b_dulwich', 'new_r2b_hendon_colindale']),
+    london_used: sumCols(['used_r2b_hammersmith', 'used_r2b_redbridge', 'used_r2b_dulwich', 'used_r2b_hendon_colindale']),
+
+    makes_in_service: {
+      HYUNDAI: col(sortedRows, 'rentals_out_hyundai'),
+      KIA: col(sortedRows, 'rentals_out_kia'),
+      MERCEDES: col(sortedRows, 'rentals_out_mercedes'),
+      MG: col(sortedRows, 'rentals_out_mg'),
+      NISSAN: col(sortedRows, 'rentals_out_nissan'),
+      SKODA: col(sortedRows, 'rentals_out_skoda'),
+      TESLA: col(sortedRows, 'rentals_out_tesla'),
+      TOYOTA: col(sortedRows, 'rentals_out_toyota'),
+      VW: col(sortedRows, 'rentals_out_vw'),
+      Polestar: col(sortedRows, 'rentals_out_polestar')
+    },
+
+    hubs: {
+      Hammersmith: {
+        new_r2b: col(sortedRows, 'new_r2b_hammersmith'),
+        used_r2b: col(sortedRows, 'used_r2b_hammersmith'),
+        rentals_in: col(sortedRows, 'rentals_in_hammersmith'),
+        rentals_out: col(sortedRows, 'rentals_out_hammersmith')
+      },
+      Redbridge: {
+        new_r2b: col(sortedRows, 'new_r2b_redbridge'),
+        used_r2b: col(sortedRows, 'used_r2b_redbridge'),
+        rentals_in: col(sortedRows, 'rentals_in_redbridge'),
+        rentals_out: col(sortedRows, 'rentals_out_redbridge')
+      },
+      Dulwich: {
+        new_r2b: col(sortedRows, 'new_r2b_dulwich'),
+        used_r2b: col(sortedRows, 'used_r2b_dulwich'),
+        rentals_in: col(sortedRows, 'rentals_in_dulwich'),
+        rentals_out: col(sortedRows, 'rentals_out_dulwich')
+      },
+      'Colindale/Hendon': {
+        new_r2b: col(sortedRows, 'new_r2b_hendon_colindale'),
+        used_r2b: col(sortedRows, 'used_r2b_hendon_colindale'),
+        rentals_in: col(sortedRows, 'rentals_in_hendon_colindale'),
+        rentals_out: col(sortedRows, 'rentals_out_hendon_colindale')
+      }
+    },
+
+    regional_hubs: {
+      Cardiff: {
+        new_r2b: col(sortedRows, 'new_r2b_cardiff'),
+        used_r2b: col(sortedRows, 'used_r2b_cardiff'),
+        returns: col(sortedRows, 'r2b_returns_cardiff')
+      },
+      Manchester: {
+        new_r2b: col(sortedRows, 'new_r2b_manchester'),
+        used_r2b: col(sortedRows, 'used_r2b_manchester'),
+        returns: col(sortedRows, 'r2b_returns_manchester')
+      },
+      'Shah Manchester': {
+        new_r2b: col(sortedRows, 'new_r2b_shah_manchester'),
+        used_r2b: col(sortedRows, 'used_r2b_shah_manchester'),
+        returns: col(sortedRows, 'r2b_returns_shah_manchester')
+      },
+      Birmingham: {
+        new_r2b: col(sortedRows, 'new_r2b_birmingham'),
+        used_r2b: col(sortedRows, 'used_r2b_birmingham'),
+        returns: col(sortedRows, 'r2b_returns_birmingham')
+      }
+    }
+  };
+}
+
+function transformSalesData(rowsByFleet) {
+  const transformed = {};
+  Object.keys(FLEET_VIEWS).forEach(fleet => {
+    transformed[fleet] = transformSalesRows(rowsByFleet && rowsByFleet[fleet]);
+  });
+  return transformed;
+}
+
+function loadSalesData() {
+  if(!window.google || !google.script || !google.script.run) {
+    console.warn('Apps Script runtime not available. Using dummy sales data.');
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(rowsByFleet => {
+      DATA.salesByFleet = transformSalesData(rowsByFleet);
+      renderSection(currentSection);
+    })
+    .withFailureHandler(error => {
+      console.error('Failed to load sales data', error);
+    })
+    .getSalesData();
+}
+
+// Initial render
+renderOps();
+loadSalesData();
+</script>
+</body>
+</html>
