@@ -116,12 +116,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--purple);m
 
 <header class="header">
   <div class="logo-area">
-    <svg height="36" viewBox="0 0 120 48" fill="none">
-      <path d="M18 22C18 16.5 22.5 12 28 12h20c5.5 0 10 4.5 10 10v4c0 5.5-4.5 10-10 10H28c-5.5 0-10-4.5-10-10v-4z" stroke="#37d32f" stroke-width="3" fill="none"/>
-      <path d="M12 28c0 0 3-12 16-15" stroke="#37d32f" stroke-width="3" stroke-linecap="round" fill="none"/>
-      <path d="M64 28c0 0-3-12-16-15" stroke="#37d32f" stroke-width="3" stroke-linecap="round" fill="none"/>
-      <text x="25" y="31" font-family="DM Sans,sans-serif" font-weight="700" font-size="14" fill="white">otto</text>
-    </svg>
+    <img
+      src="https://pulse.ottocar.co.uk/assets/logo_purple-C0XXJpAm.svg"
+      alt="Otto Car"
+      height="36"
+      style="display:block"
+    />
     <div class="hdiv"></div>
     <span class="htitle">Weekly Metrics Dashboard</span>
   </div>
@@ -151,7 +151,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--purple);m
     <button class="fleet-btn" id="btnTfs" onclick="setFleet('tfs',this)">TFS</button>
     <button class="fleet-btn" id="btnTriplePoint" onclick="setFleet('triple-point',this)">Triple-Point</button>
   </div>
-  <span class="fleet-note" id="fleetNote">Sales - All</span>
+  <span class="fleet-note" id="fleetNote">Ops - All</span>
 </div>
 
 <main class="main">
@@ -235,16 +235,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--purple);m
 
 <!-- ===== FRESHDESK ===== -->
 <div class="section" id="section-freshdesk">
-  <div class="sec-header"><h1 class="sec-title">Freshdesk</h1><p class="sec-desc">Ticket volumes · response metrics · overdue breakdown — week of 16 Jan 2026</p></div>
-  <div class="insight"><div class="insight-icon">🎧</div><div><div class="insight-ttl">Freshdesk — week of 16 Jan</div><div class="insight-txt" id="fd-insight">Loading insight...</div></div></div>
+  <div class="sec-header"><h1 class="sec-title">Freshdesk</h1><p class="sec-desc" id="fd-desc">Ticket volumes · response metrics · queue breakdown</p></div>
+  <div class="insight"><div class="insight-icon">🎧</div><div><div class="insight-ttl" id="fd-insight-title">Freshdesk</div><div class="insight-txt" id="fd-insight">Loading insight...</div></div></div>
   <div class="kpi-grid" id="fd-stats"></div>
   <div class="cgrid1">
     <div class="ccard"><div class="chead"><div><div class="ctitle">Tickets received vs overdue - trend</div><div class="csub">Total tickets received (purple) · overdue tickets (red) - 6-week view</div></div></div><div class="cwrap t"><canvas id="c-fd-vol" role="img" aria-label="Tickets received vs overdue trend">Tickets received and overdue trend.</canvas></div></div>
   </div>
   <div class="ccard" style="margin-bottom:1.5rem">
-    <div class="chead"><div><div class="ctitle">Overdue tickets by department</div><div class="csub">Latest week breakdown — all queues</div></div><span class="cbadge r" id="fd-overdue-total-badge">—</span></div>
+    <div class="chead"><div><div class="ctitle">Tickets by queue</div><div class="csub">Latest week breakdown — all queues</div></div><span class="cbadge r" id="fd-overdue-total-badge">—</span></div>
     <div id="fd-overdue-dept-grid" style="margin-top:.25rem"></div>
-    <div class="cwrap lg" style="margin-top:1.25rem"><canvas id="c-fd-overdue-dept" role="img" aria-label="Overdue tickets by department">Overdue by department.</canvas></div>
+    <div class="cwrap lg" style="margin-top:1.25rem"><canvas id="c-fd-overdue-dept" role="img" aria-label="Tickets by Freshdesk queue">Tickets by queue.</canvas></div>
   </div>
 </div>
 
@@ -324,19 +324,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--purple);m
 
 <!-- ===== SERVICING ===== -->
 <div class="section" id="section-servicing">
-  <div class="sec-header"><h1 class="sec-title">Servicing</h1><p class="sec-desc">Fleet servicing status · make breakdown — week of 21 Jan 2026</p></div>
-  <div class="insight"><div class="insight-icon">🔩</div><div><div class="insight-ttl">Servicing — week of 21 Jan</div><div class="insight-txt" id="svc-insight">Loading insight...</div></div></div>
+  <div class="sec-header"><h1 class="sec-title">Servicing</h1><p class="sec-desc" id="svc-desc">Fleet servicing status · make breakdown</p></div>
+  <div class="insight"><div class="insight-icon">🔩</div><div><div class="insight-ttl" id="svc-insight-title">Servicing</div><div class="insight-txt" id="svc-insight">Loading insight...</div></div></div>
   <div class="kpi-grid" id="svc-stats"></div>
   <div class="cgrid">
     <div class="ccard"><div class="chead"><div><div class="ctitle">Fleet in servicing trend</div><div class="csub">Count — 4-week view</div></div></div><div class="cwrap"><canvas id="c-svc-trend" role="img" aria-label="Fleet in servicing trend">Fleet servicing trend.</canvas></div></div>
     <div class="ccard"><div class="chead"><div><div class="ctitle">Vehicles by make — latest week</div><div class="csub">Distribution in servicing</div></div></div><div class="cwrap"><canvas id="c-svc-makes" role="img" aria-label="Vehicles in servicing by make">Vehicle make breakdown.</canvas></div></div>
   </div>
   <div class="ccard" style="margin-bottom:1.5rem">
-    <div class="chead"><div><div class="ctitle">In-servicing status breakdown</div><div class="csub">Current pipeline — latest week</div></div><span class="cbadge p" id="svc-status-total-badge">—</span></div>
-    <div id="svc-status-cards" style="margin-bottom:1.25rem"></div>
+    <div class="chead"><div><div class="ctitle">Vehicles by location</div><div class="csub">Latest week — all servicing sites</div></div><span class="cbadge p" id="svc-loc-total-badge">—</span></div>
+    <div id="svc-loc-cards" style="margin-bottom:1.25rem"></div>
+    <div class="cwrap"><canvas id="c-svc-locs" role="img" aria-label="Vehicles by servicing location">Servicing locations chart.</canvas></div>
+  </div>
+  <div class="ccard" id="svc-status-card" style="margin-bottom:1.5rem">
+    <div class="chead"><div><div class="ctitle">Servicing status metrics</div><div class="csub">SERVICING - All only — latest week</div></div><span class="cbadge p" id="svc-status-total-badge">—</span></div>
     <div class="cgrid" style="margin-bottom:0">
-      <div><div class="ctitle" style="font-size:.72rem;margin-bottom:.75rem">Status composition</div><div class="cwrap" style="height:240px"><canvas id="c-svc-status-donut" role="img" aria-label="Servicing status donut">Status donut chart.</canvas></div></div>
-      <div><div class="ctitle" style="font-size:.72rem;margin-bottom:.75rem">Volume by status</div><div class="cwrap" style="height:240px"><canvas id="c-svc-status" role="img" aria-label="Servicing status bar chart">Status bar chart.</canvas></div></div>
+      <div id="svc-status-cards"></div>
+      <div><div class="ctitle" style="font-size:.72rem;margin-bottom:.75rem">Status composition</div><div class="cwrap" style="height:300px"><canvas id="c-svc-status-donut" role="img" aria-label="Servicing status composition">Status composition chart.</canvas></div></div>
     </div>
   </div>
 </div>
@@ -464,7 +468,7 @@ const DATA = {"sales":{"weeks":["2025-05-02","2025-05-09","2025-05-16","2025-05-
   "tpi_captured":[14,22,4,7]
 },"servicing":{"weeks":["2026-01-01","2026-01-07","2026-01-14","2026-01-21"],"count_in_servicing":[256,280,270,260],"pct_in_servicing":[0.0289,0.013,0.025,0.026],"fleet_number":[4987,5000,4980,4700],"avg_days_offroad":[14.2,16.8,15.3,13.7],"makes":{"HYUNDAI":[22,65,99,97],"KIA":[76,26,48,12],"MERCEDES":[62,37,94,85],"MG":[60,78,22,70],"NISSAN":[67,88,95,43],"SKODA":[54,75,75,80],"TESLA":[55,73,41,78],"TOYOTA":[46,16,54,73],"VW":[72,34,0,7],"Polestar":[78,51,85,84]},"northfields_yard":[67,66,46,0],"pending_workshop":[85,45,25,71],"available_courtesy":[65,94,25,70],"ready_for_sales":[29,97,94,84],"awaiting_customer_collection":[18,22,15,20],"panel_work_required":[24,18,31,27],"other":[12,16,9,14],"waiting_phv_date":[8,11,6,9]},"creditcontrol":{"weeks":["2024-01-05","2024-01-12","2024-01-19","2024-01-26","2024-02-02","2024-02-09","2024-02-16","2024-02-23","2024-03-01","2024-03-08","2024-03-15","2024-03-22"],"paid_invoice_pct":[0.9202,0.9295,0.9306,0.9334,0.9398,0.9493,0.9478,0.9574,0.9412,0.9571,0.9477,0.9474],"four_week_collection":[0.9875,0.9871,0.9956,0.9931,0.9905,0.9940,0.9957,0.9918,0.9926,0.9924,0.9928,0.9926],"arrears_total":[175441,163621,165755,153658,147606,144778,130878,131507,139455,132858,124300,124662],"week1_arrears":[99086,90318,99286,86586,83226,81354,76455,73797,79845,76411,70993,68688],"week2_arrears":[26540,23624,22836,20832,15718,14566,13439,15366,17081,17186,13893,14687],"week3_arrears":[8060,7232,6129,6700,6542,6249,3630,3144,5575,3837,5330,4782],"week4_arrears":[3991,4199,3704,3861,3900,3906,2442,2733,1009,3290,1174,4133],"over4wk_arrears":[37765,38249,33800,35680,38220,38702,34911,36466,35944,32135,32910,32371],"over4wk_pct":[0.2153,0.2338,0.2039,0.2322,0.2589,0.2673,0.2667,0.2773,0.2577,0.2419,0.2648,0.2597],"write_offs_total":[381977,381977,381977,409456,409456,409456,409456,409456,409456,424911,424911,424911],"r2b":[3079,3083,3087,3087,3089,3102,3099,3105,3090,3082,3074,3057],"r2b_van":[62,60,59,58,57,56,55,54,53,52,51,50],"short_term_rental":[1201,1197,1176,1175,1169,1165,1155,1162,1173,1179,1167,1154],"pco_flex":[0,0,0,0,0,0,0,0,0,0,0,0],"aftercare":[276,283,288,284,282,282,282,271,281,281,286,290],"dashcam":[396,412,426,438,445,452,460,468,475,482,490,498],"repos_requested":[10,19,9,4,5,8,4,11,9,7,9,8],"repos_collected":[4,5,5,4,3,6,2,8,5,4,7,6],"fleet_arrears":{"overall":{"week1":99086,"week2":26540,"week3":8060,"week4":3991,"week4p":37765,"total":175441},"london":{"week1":45000,"week2":12000,"week3":3500,"week4":1800,"week4p":17000,"total":79300},"manchester":{"week1":40297,"week2":39086,"week3":34934,"week4":6065,"week4p":13298,"total":133680},"birmingham":{"week1":8200,"week2":2100,"week3":650,"week4":320,"week4p":4200,"total":15470},"cardiff":{"week1":5589,"week2":1354,"week3":976,"week4":806,"week4p":3267,"total":11992}}}};
 
-// Fleet state maps to the Sales sheet tabs.
+// Fleet state maps to the source sheet tabs.
 let currentFleet = 'all';
 let currentSection = 'ops';
 let selectedLondonHub = 'Hammersmith';
@@ -472,12 +476,12 @@ let selectedRegionalHub = 'Cardiff';
 const charts = {};
 
 const FLEET_VIEWS = {
-  all: {label:'All fleets', sheet:'Sales - All', activeClass:'active-all', btnId:'btnAll'},
-  otto: {label:'Otto', sheet:'Sales - Otto', activeClass:'active-otto', btnId:'btnOtto'},
-  weflex: {label:'WeFlex', sheet:'Sales - Weflex', activeClass:'active-weflex', btnId:'btnWeflex'},
-  lcm: {label:'LCM', sheet:'Sales - LCM', activeClass:'active-lcm', btnId:'btnLcm'},
-  tfs: {label:'TFS', sheet:'Sales - TFS', activeClass:'active-tfs', btnId:'btnTfs'},
-  'triple-point': {label:'Triple-Point', sheet:'Sales - TP', activeClass:'active-triple-point', btnId:'btnTriplePoint'}
+  all: {label:'All fleets', sheet:'Sales - All', opsSheet:'All', servicingSheet:'SERVICING - All', activeClass:'active-all', btnId:'btnAll'},
+  otto: {label:'Otto', sheet:'Sales - Otto', opsSheet:'Otto', servicingSheet:'SERVICING - Otto', activeClass:'active-otto', btnId:'btnOtto'},
+  weflex: {label:'WeFlex', sheet:'Sales - Weflex', opsSheet:'WF', servicingSheet:'SERVICING - WF', activeClass:'active-weflex', btnId:'btnWeflex'},
+  lcm: {label:'LCM', sheet:'Sales - LCM', opsSheet:'LCM', servicingSheet:'SERVICING - LCM', activeClass:'active-lcm', btnId:'btnLcm'},
+  tfs: {label:'TFS', sheet:'Sales - TFS', opsSheet:'TFS', servicingSheet:'SERVICING - TFS', activeClass:'active-tfs', btnId:'btnTfs'},
+  'triple-point': {label:'Triple-Point', sheet:'Sales - TP', opsSheet:'TP', servicingSheet:'SERVICING - TP', activeClass:'active-triple-point', btnId:'btnTriplePoint'}
 };
 
 // Non-sales sections still use rough demo scaling until their real data sources exist.
@@ -494,8 +498,25 @@ function scaleArr(arr, fleet) {
   return (arr || []).map(v => fleetScale(v, fleet));
 }
 
+function pctSeries(arr) {
+  return (arr || []).map(v => {
+    const parsed = Number(v) || 0;
+    return parsed > 1 ? parsed / 100 : parsed;
+  });
+}
+
 function zeroSeries(length) {
   return Array.from({length}, () => 0);
+}
+
+function alignSeries(sourceWeeks, targetWeeks, values) {
+  const byWeek = {};
+  (sourceWeeks || []).forEach((week, index) => {
+    byWeek[week] = values && values[index] !== undefined ? values[index] : 0;
+  });
+  const aligned = (targetWeeks || []).map(week => byWeek[week] || 0);
+  if(aligned.some(value => value !== 0) || !(values || []).length) return aligned;
+  return (values || []).slice(-targetWeeks.length);
 }
 
 function salesDataForCurrentFleet() {
@@ -507,6 +528,7 @@ function salesDataForCurrentFleet() {
   return {
     ...source,
     website_sales: source.website_sales || zeros,
+    r2b_returns: source.r2b_returns || source.r2b_collections || zeros,
     regional_new: source.regional_new || zeros,
     regional_used: source.regional_used || zeros,
     regional_hubs: {
@@ -518,21 +540,76 @@ function salesDataForCurrentFleet() {
   };
 }
 
+function opsData() {
+  const source = (DATA.opsByFleet && DATA.opsByFleet[currentFleet]) || DATA.ops;
+  const weeks = source && source.weeks ? source.weeks : [];
+  const zeros = zeroSeries(weeks.length);
+  const salesSource = (DATA.salesByFleet && DATA.salesByFleet[currentFleet]) || DATA.sales;
+  const salesWeeks = salesSource && salesSource.weeks ? salesSource.weeks : [];
+  const salesR2BReturns = salesSource && (salesSource.r2b_returns || salesSource.r2b_collections) ? (salesSource.r2b_returns || salesSource.r2b_collections) : [];
+  const salesRentalsIn = salesSource && salesSource.rentals_in ? salesSource.rentals_in : [];
+  return {
+    ...source,
+    dvla_fleet: source.dvla_fleet || DATA.ops.dvla_fleet || zeros,
+    live: source.live || source.ordway_live || DATA.ops.ordway_live || zeros,
+    ordway_live: source.ordway_live || source.live || DATA.ops.ordway_live || zeros,
+    available: source.available || zeros,
+    in_servicing: source.in_servicing || zeros,
+    courtesy_cars: source.courtesy_cars || source.courtesy_assigned || zeros,
+    courtesy_assigned: source.courtesy_assigned || source.courtesy_cars || zeros,
+    fleet_utilisation: pctSeries(source.fleet_utilisation || source.fleet_utilisation_pct || zeros),
+    total_onsite: source.total_onsite || source.total_onsite_vehicles || zeros,
+    sites: source.sites || {},
+    r2b_terminations: source.r2b_terminations || alignSeries(salesWeeks, weeks, salesR2BReturns),
+    rental_terminations: source.rental_terminations || alignSeries(salesWeeks, weeks, salesRentalsIn)
+  };
+}
+
+function servicingDataForCurrentFleet() {
+  const source = (DATA.servicingByFleet && DATA.servicingByFleet[currentFleet]) || DATA.servicing;
+  const weeks = source && source.weeks ? source.weeks : [];
+  const zeros = zeroSeries(weeks.length);
+  return {
+    ...source,
+    count_in_servicing: source.count_in_servicing || zeros,
+    pct_in_servicing: source.pct_in_servicing || zeros,
+    fleet_number: source.fleet_number || zeros,
+    avg_days_offroad: source.avg_days_offroad || zeros,
+    makes: source.makes || {},
+    sites: source.sites || {},
+    northfields_yard: source.northfields_yard || zeros,
+    pending_workshop: source.pending_workshop || zeros,
+    available_courtesy: source.available_courtesy || zeros,
+    awaiting_customer_collection: source.awaiting_customer_collection || zeros,
+    panel_work_required: source.panel_work_required || zeros,
+    ready_for_sales: source.ready_for_sales || zeros,
+    waiting_phv_date: source.waiting_phv_date || zeros,
+    other_status: source.other_status || source.other || zeros
+  };
+}
+
+function sourceLabelForCurrentSection(view) {
+  if(currentSection === 'ops') return `Ops - ${view.opsSheet}`;
+  if(currentSection === 'servicing') return view.servicingSheet;
+  return view.sheet;
+}
+
 function syncFleetUi() {
   const view = FLEET_VIEWS[currentFleet] || FLEET_VIEWS.all;
+  const sourceLabel = sourceLabelForCurrentSection(view);
   document.querySelectorAll('.fleet-btn').forEach(b=>{b.className='fleet-btn';});
   const btn = document.getElementById(view.btnId);
   if(btn) btn.className = `fleet-btn ${view.activeClass}`;
-  document.getElementById('fleetNote').textContent = view.sheet;
+  document.getElementById('fleetNote').textContent = sourceLabel;
 
   const banner = document.getElementById('fleetBanner');
-  if(currentFleet!=='all' && currentSection==='sales') {
-    document.getElementById('fleetBannerTtl').textContent = view.label+' sales view active';
-    document.getElementById('fleetBannerTxt').innerHTML = `Sales metrics are shown from <strong>${view.sheet}</strong>.`;
+  if(currentFleet!=='all' && (currentSection==='ops' || currentSection==='sales' || currentSection==='servicing')) {
+    document.getElementById('fleetBannerTtl').textContent = `${view.label} ${currentSection} view active`;
+    document.getElementById('fleetBannerTxt').innerHTML = `Metrics are shown from <strong>${sourceLabel}</strong>.`;
     banner.style.display='flex';
   } else if(currentFleet!=='all') {
     document.getElementById('fleetBannerTtl').textContent = view.label+' fleet filter active';
-    document.getElementById('fleetBannerTxt').innerHTML = `This section still uses demo data. Real source data has only been prepared for Sales.`;
+    document.getElementById('fleetBannerTxt').innerHTML = `This section still uses demo data. Real source data has been prepared for Operations, Sales and Servicing.`;
     banner.style.display='flex';
   } else {
     banner.style.display='none';
@@ -566,6 +643,7 @@ function statCard(label, value, prevValue, unit='', accentClass='', opts={}) {
   if(unit==='%') displayVal = (value*100).toFixed(1)+'%';
   else if(unit==='£') displayVal = '£'+(+value).toLocaleString('en-GB',{maximumFractionDigits:0});
   else if(unit===' hrs') displayVal = (+value).toFixed(1)+'h';
+  else if(unit===' days') displayVal = (+value).toFixed(1)+'d';
   else displayVal = Math.round(value).toLocaleString();
   const valCls = accentClass==='green'?'g':accentClass==='red'?'r':'';
   const cardCls = accentClass==='red'||accentClass==='da'?'da':accentClass==='orange'||accentClass==='wa'?'wa':accentClass==='pa'?'pa':'';
@@ -616,30 +694,35 @@ function mkChart(id, type, labels, datasets, opts={}) {
 // ===== RENDER SECTIONS =====
 
 function renderOps() {
-  const d = DATA.ops; const fl = currentFleet;
+  const d = opsData(); const fl = 'all';
   const wk = weekLabels(d.weeks);
-  const cur=3, prev=2;
+  const cur=d.weeks.length-1, prev=Math.max(0, cur-1);
   const av = scaleArr(d.available, fl);
   const sv = scaleArr(d.in_servicing, fl);
   const ut = d.fleet_utilisation;
-  const cc = scaleArr(d.courtesy_cars, fl);
+  const cc = scaleArr(d.courtesy_assigned || d.courtesy_cars, fl);
   const dvla = fleetScale(d.dvla_fleet[cur],fl);
-  const live = fleetScale(d.ordway_live[cur],fl);
+  const live = fleetScale((d.live || d.ordway_live)[cur],fl);
+  const totalOnsite = d.total_onsite || d.total_onsite_vehicles;
+  const latestShort = shortWeekLabel(d.weeks[cur]);
 
   // Insight
-  document.getElementById('ops-insight').innerHTML = `DVLA fleet <strong>${Math.round(dvla).toLocaleString()}</strong> with <strong>${Math.round(live).toLocaleString()} live accounts</strong>. Fleet utilisation at <strong>${ut[cur]}%</strong>${ut[cur]<97?' — below 98% target':''}. In servicing: <strong>${Math.round(sv[cur])}</strong> vehicles${sv[cur]>sv[prev]?' — up wk/wk':' — stable'}. Available: <strong>${Math.round(av[cur])}</strong>. Total on site: <strong>${Math.round(fleetScale(d.total_onsite[cur],fl)).toLocaleString()}</strong>.`;
+  document.querySelector('#section-ops .sec-desc').textContent =
+    `Fleet utilisation · vehicle distribution · logistics — week of ${longWeekLabel(d.weeks[cur])}`;
+  document.querySelector('#section-ops .insight-ttl').textContent = `Ops — week of ${latestShort}`;
+  document.getElementById('ops-insight').innerHTML = `DVLA fleet <strong>${Math.round(dvla).toLocaleString()}</strong> with <strong>${Math.round(live).toLocaleString()} live vehicles</strong>. Fleet utilisation at <strong>${(ut[cur]*100).toFixed(1)}%</strong>${ut[cur]<0.98?' — below 98% target':''}. In servicing: <strong>${Math.round(sv[cur])}</strong> vehicles${sv[cur]>sv[prev]?' — up wk/wk':' — stable'}. Available: <strong>${Math.round(av[cur])}</strong>. Total on site: <strong>${Math.round(fleetScale(totalOnsite[cur],fl)).toLocaleString()}</strong>.`;
 
   document.getElementById('ops-stats').innerHTML =
     statCard('DVLA Fleet', dvla, fleetScale(d.dvla_fleet[prev],fl)) +
-    statCard('Live accounts', live, fleetScale(d.ordway_live[prev],fl), '', 'pa') +
+    statCard('Live vehicles', live, fleetScale((d.live || d.ordway_live)[prev],fl), '', 'pa') +
     statCard('In servicing', sv[cur], sv[prev], '', sv[cur]>800?'wa':'') +
     statCard('Available', av[cur], av[prev]) +
     statCard('Courtesy cars', cc[cur], cc[prev]) +
-    statCard('Fleet utilisation', ut[cur]/100, ut[prev]/100, '%', ut[cur]>=97?'green':ut[cur]>=95?'orange':'red') +
-    statCard('Vehicles on site', fleetScale(d.total_onsite[cur],fl), fleetScale(d.total_onsite[prev],fl), '', 'pa');
+    statCard('Fleet utilisation', ut[cur], ut[prev], '%', ut[cur]>=0.97?'green':ut[cur]>=0.95?'orange':'red') +
+    statCard('Vehicles on site', fleetScale(totalOnsite[cur],fl), fleetScale(totalOnsite[prev],fl), '', 'pa');
 
   // Location cards
-  const sites = d.sites; const kpis = {Northfields:60, Colindale:60, 'Kings Mall':40};
+  const sites = d.sites || {}; const kpis = {Northfields:60, Colindale:60, 'Kings Mall':40};
   document.getElementById('ops-locs').innerHTML = Object.keys(sites).map(s => {
     const v = Math.round(fleetScale(sites[s][cur], fl));
     const kpi = kpis[s];
@@ -655,7 +738,7 @@ function renderOps() {
   ]);
 
   mkChart('c-ops-util','line',wk,[
-    {label:'Utilisation %',data:ut,borderColor:G,backgroundColor:'rgba(55,211,47,0.07)',fill:true,tension:.4,pointRadius:3}
+    {label:'Utilisation %',data:ut.map(v=>v*100),borderColor:G,backgroundColor:'rgba(55,211,47,0.07)',fill:true,tension:.4,pointRadius:3}
   ],{scales:{x:{grid:{display:false},ticks:{maxRotation:45,font:{size:10}}},y:{min:90,max:100,grid:{color:'rgba(35,15,88,.06)'},ticks:{callback:v=>v+'%',font:{size:10}}}}});
 
   mkChart('c-ops-avail','bar',wk,[
@@ -663,8 +746,8 @@ function renderOps() {
     {label:'Courtesy',data:cc,backgroundColor:G,stack:'r',borderRadius:4}
   ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
 
-  const R2B_TERM = scaleArr([26,26,26,26],fl);
-  const RENT_TERM = scaleArr([42,42,42,42],fl);
+  const R2B_TERM = scaleArr(d.r2b_terminations,fl);
+  const RENT_TERM = scaleArr(d.rental_terminations,fl);
   mkChart('c-ops-returns','line',wk,[
     {label:'R2B terminations',data:R2B_TERM,borderColor:P,backgroundColor:'transparent',tension:.4,pointRadius:3},
     {label:'Rental terminations',data:RENT_TERM,borderColor:G,backgroundColor:'transparent',tension:.4,pointRadius:3},
@@ -822,13 +905,18 @@ function renderFreshdesk() {
   const d = DATA.freshdesk; 
   const fl = 'all'; // Always use 'all' fleet for Freshdesk
   const wk = weekLabels(d.weeks);
-  const cur=5, prev=4;
+  const cur=d.weeks.length-1, prev=Math.max(0, cur-1);
   const recv = scaleArr(d.received, fl);
   const open = scaleArr(d.total_open, fl);
   const ovd  = scaleArr(d.overdue, fl);
   const fcr  = d.fcr;
+  const weekLabel = longWeekLabel(d.weeks[cur]);
 
   // ── INSIGHT ──
+  document.getElementById('fd-desc').textContent =
+    `Ticket volumes · response metrics · queue breakdown — week of ${weekLabel}`;
+  document.getElementById('fd-insight-title').textContent =
+    `Freshdesk — week of ${shortWeekLabel(d.weeks[cur])}`;
   document.getElementById('fd-insight').innerHTML =
     `<strong>${Math.round(recv[cur]).toLocaleString()} tickets received</strong> this week. <strong>${Math.round(open[cur])} open</strong> · <strong>${Math.round(ovd[cur])} overdue</strong>. Avg first response: <strong>${d.avg_first_response_hrs[cur]}h</strong>. Avg resolution: <strong>${d.avg_resolution_hrs[cur]}h</strong>. FCR: <strong>${(fcr[cur]*100).toFixed(1)}%</strong>.`;
 
@@ -847,11 +935,11 @@ function renderFreshdesk() {
     {label:'Overdue tickets',  data:ovd,  borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.07)', fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#ef4444', pointBorderColor:'#fff', pointBorderWidth:2},
   ],{plugins:{legend:mkLegend(),tooltip:TT},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
 
-  // ── OVERDUE BY DEPT ──
+  // ── QUEUE BREAKDOWN ──
   const depts = Object.keys(d.overdue_by_dept);
   const deptVals = depts.map(k => d.overdue_by_dept[k]);
   const totalOverdue = deptVals.reduce((a,b)=>a+b,0);
-  document.getElementById('fd-overdue-total-badge').textContent = totalOverdue + ' total overdue';
+  document.getElementById('fd-overdue-total-badge').textContent = totalOverdue + ' total tickets';
 
   // Dept mini cards
   const deptColors = ['#230f58','#ef4444','#5e3f8e','#f59e0b','#1D9E75','#b8a8d9','#31be2a','#4d616e','#7c5cbf','#a8c5cc','#88d985','#56c553','#e07b39','#314049','#37d32f'];
@@ -876,7 +964,7 @@ function renderFreshdesk() {
 
   // Dept horizontal bar chart
   mkChart('c-fd-overdue-dept','bar',depts,[
-    {label:'Overdue tickets', data:deptVals, backgroundColor:depts.map((_,i)=>deptColors[i%deptColors.length]), borderRadius:4}
+    {label:'Tickets', data:deptVals, backgroundColor:depts.map((_,i)=>deptColors[i%deptColors.length]), borderRadius:4}
   ],{indexAxis:'y',plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}},beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:10}}}}});
 }
 
@@ -1072,23 +1160,29 @@ function renderClaims() {
 }
 
 function renderServicing() {
-  const d = DATA.servicing; const fl = currentFleet;
+  const d = servicingDataForCurrentFleet(); const fl = 'all';
   const wk = weekLabels(d.weeks);
-  const cur=3, prev=2;
+  const cur=d.weeks.length-1, prev=Math.max(0, cur-1);
   const cnt      = scaleArr(d.count_in_servicing, fl);
-  const fleet_n  = scaleArr(d.fleet_number, fl);
   const pct      = d.pct_in_servicing;
   const avgDays  = d.avg_days_offroad;
+  const fleetView = FLEET_VIEWS[currentFleet] || FLEET_VIEWS.all;
+  const latestLong = longWeekLabel(d.weeks[cur]);
+  const latestShort = shortWeekLabel(d.weeks[cur]);
 
   // ── INSIGHT ──
+  document.getElementById('svc-desc').textContent =
+    `Fleet servicing status · make breakdown · locations — week of ${latestLong}`;
+  document.getElementById('svc-insight-title').textContent =
+    `Servicing — ${fleetView.label} — week of ${latestShort}`;
   document.getElementById('svc-insight').innerHTML =
-    `Fleet number <strong>${Math.round(fleet_n[cur]).toLocaleString()}</strong>. <strong>${Math.round(cnt[cur])} vehicles in servicing</strong> (${(pct[cur]*100).toFixed(1)}% of fleet). Avg days off road: <strong>${avgDays[cur]} days</strong>${avgDays[cur]>15?' — above target':''}.`;
+    `<strong>${Math.round(cnt[cur])} vehicles in servicing</strong> (${(pct[cur]*100).toFixed(1)}% of fleet). Avg days in servicing: <strong>${avgDays[cur]} days</strong>${avgDays[cur]>15?' — above target':''}. Make and location splits are shown for the latest week.`;
 
   // ── KPI BOXES: in-servicing count, % of fleet, avg days off road only ──
   document.getElementById('svc-stats').innerHTML =
     statCard('In servicing', cnt[cur], cnt[prev], '', 'pa') +
     statCard('% of fleet', pct[cur], pct[prev], '%', pct[cur]<=0.025?'green':'wa') +
-    statCard('Avg days off road', avgDays[cur], avgDays[prev], ' hrs', avgDays[cur]<=15?'green':'wa');
+    statCard('Avg days in servicing', avgDays[cur], avgDays[prev], ' days', avgDays[cur]<=15?'green':'wa');
 
   // ── TREND LINE ──
   mkChart('c-svc-trend','line',wk,[
@@ -1102,17 +1196,56 @@ function renderServicing() {
     {label:'In servicing',data:makeVals,backgroundColor:makes.map((_,i)=>PAL[i%PAL.length]),borderRadius:4}
   ],{plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{maxRotation:30,font:{size:10}}},y:{grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
 
-  // ── STATUS BREAKDOWN ──
+  // ── BY LOCATION ──
+  const siteNames = Object.keys(d.sites || {});
+  const siteVals = siteNames.map(s => Math.round(fleetScale(d.sites[s][cur], fl)));
+  const siteTotal = siteVals.reduce((a,b)=>a+b,0);
+  const maxSiteVal = Math.max(...siteVals, 1);
+  document.getElementById('svc-loc-total-badge').textContent = siteTotal + ' total';
+  document.getElementById('svc-loc-cards').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem">' +
+    siteNames.map((site, i) => {
+      const v = siteVals[i];
+      const pctWidth = Math.round((v / maxSiteVal) * 100);
+      const share = siteTotal > 0 ? (v / siteTotal * 100).toFixed(1) : '0.0';
+      const color = PAL[i % PAL.length];
+      return `<div style="background:var(--purple10);border-radius:8px;padding:.85rem 1rem">
+        <div style="font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--grey80);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${site}</div>
+        <div style="display:flex;align-items:baseline;gap:.35rem;margin-bottom:.35rem">
+          <span style="font-size:1.25rem;font-weight:700;font-family:'DM Mono',monospace;color:${color};line-height:1">${v}</span>
+          <span style="font-size:.65rem;font-family:'DM Mono',monospace;color:var(--grey80)">${share}%</span>
+        </div>
+        <div style="height:4px;background:rgba(35,15,88,.12);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${pctWidth}%;background:${color};border-radius:2px"></div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  mkChart('c-svc-locs','bar',siteNames,[
+    {label:'Vehicles',data:siteVals,backgroundColor:siteNames.map((_,i)=>PAL[i%PAL.length]),borderRadius:4}
+  ],{plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{display:false},ticks:{maxRotation:30,font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}}}});
+
+  // ── SERVICING STATUS METRICS: only available on SERVICING - All ──
+  const statusCard = document.getElementById('svc-status-card');
+  if(currentFleet !== 'all') {
+    statusCard.style.display = 'none';
+    if(charts['c-svc-status-donut']) {
+      charts['c-svc-status-donut'].destroy();
+      delete charts['c-svc-status-donut'];
+    }
+    return;
+  }
+
+  statusCard.style.display = 'block';
   const statuses = [
-    { key:'northfields_yard',           label:'Northfields Yard',           color:'#230f58' },
-    { key:'pending_workshop',           label:'Pending Workshop',           color:'#5e3f8e' },
-    { key:'available_courtesy',         label:'Available Courtesy',         color:'#37d32f' },
-    { key:'awaiting_customer_collection',label:'Awaiting Customer Collection',color:'#1D9E75'},
-    { key:'panel_work_required',        label:'Panel Work Required',        color:'#f59e0b' },
-    { key:'ready_for_sales',            label:'Ready for Sales',            color:'#31be2a' },
-    { key:'other',                      label:'Other',                      color:'#4d616e' },
-    { key:'waiting_phv_date',           label:'Waiting for PHV Date',       color:'#b8a8d9' },
-  ];
+    { key:'northfields_yard',             label:'Northfields Yard',             color:P },
+    { key:'pending_workshop',             label:'Pending Workshop',             color:LBLUE },
+    { key:'available_courtesy',           label:'Available Courtesy',           color:G },
+    { key:'awaiting_customer_collection', label:'Awaiting Customer Collection', color:TEAL },
+    { key:'panel_work_required',          label:'Panel Work Required',          color:AMBER },
+    { key:'ready_for_sales',              label:'Ready for Sales',              color:G2 },
+    { key:'waiting_phv_date',             label:'Waiting for PHV Date',         color:'#b8a8d9' },
+    { key:'other_status',                 label:'Other Status',                 color:GREY },
+  ].filter(s => Array.isArray(d[s.key]));
 
   const statusVals  = statuses.map(s => Math.round(fleetScale(d[s.key][cur], fl)));
   const statusTotal = statusVals.reduce((a,b)=>a+b, 0);
@@ -1120,9 +1253,9 @@ function renderServicing() {
 
   document.getElementById('svc-status-total-badge').textContent = statusTotal + ' total';
 
-  // Mini status cards
+  // KPI bubbles
   document.getElementById('svc-status-cards').innerHTML =
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem">' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:.7rem">' +
     statuses.map((s, i) => {
       const v   = statusVals[i];
       const pv  = Math.round(fleetScale(d[s.key][prev], fl));
@@ -1152,11 +1285,6 @@ function renderServicing() {
     data:{ labels:statuses.map(s=>s.label), datasets:[{ data:statusVals, backgroundColor:statuses.map(s=>s.color), borderWidth:2, borderColor:'#fff', hoverOffset:6 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:true, position:'right', labels:{boxWidth:10,font:{size:9},color:'#314049'} }, tooltip:TT } }
   });
-
-  // Horizontal bar chart
-  mkChart('c-svc-status','bar',statuses.map(s=>s.label),[
-    {label:'Vehicles', data:statusVals, backgroundColor:statuses.map(s=>s.color), borderRadius:4}
-  ],{indexAxis:'y',plugins:{legend:{display:false},tooltip:TT},scales:{x:{beginAtZero:true,grid:{color:'rgba(35,15,88,.06)'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:9},color:'#314049'}}}});
 }
 
 function renderCredit() {
@@ -1411,7 +1539,7 @@ function showSection(name, el) {
   el.classList.add('active');
   currentSection = name;
   
-  // Hide fleet bar for Freshdesk and Calls, show for all others
+  // Hide fleet bar where source data is not bank-specific.
   const fleetBar = document.getElementById('fleetBar');
   if(name === 'freshdesk' || name === 'calls') {
     fleetBar.classList.add('hidden');
@@ -1464,6 +1592,61 @@ function num(value) {
   return Number(cleaned) || 0;
 }
 
+function pctNum(value) {
+  if(value === '' || value === null || value === undefined) return 0;
+  if(typeof value === 'string') {
+    const cleaned = value.replace(/,/g, '').trim();
+    const parsed = Number(cleaned.replace('%', ''));
+    if(Number.isNaN(parsed)) return 0;
+    return cleaned.includes('%') || parsed > 1 ? parsed / 100 : parsed;
+  }
+  const parsed = Number(value) || 0;
+  return parsed > 1 ? parsed / 100 : parsed;
+}
+
+function durationHours(value) {
+  if(value === '' || value === null || value === undefined) return 0;
+  if(value instanceof Date) return value.getHours() + (value.getMinutes() / 60) + (value.getSeconds() / 3600);
+  if(typeof value === 'number') return value < 1 ? value * 24 : value;
+  const cleaned = String(value).trim().toLowerCase();
+  const hm = cleaned.match(/^(\d+(?:\.\d+)?):(\d{1,2})(?::(\d{1,2}))?$/);
+  if(hm) return Number(hm[1]) + (Number(hm[2]) / 60) + (Number(hm[3] || 0) / 3600);
+  const hours = cleaned.match(/(\d+(?:\.\d+)?)\s*h/);
+  const mins = cleaned.match(/(\d+(?:\.\d+)?)\s*m/);
+  if(hours || mins) return (hours ? Number(hours[1]) : 0) + (mins ? Number(mins[1]) / 60 : 0);
+  return num(value);
+}
+
+function normalizeHeader(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function rowValue(row, names) {
+  if(!row) return undefined;
+  let blankMatch;
+  for(const name of names) {
+    if(Object.prototype.hasOwnProperty.call(row, name)) {
+      if(row[name] !== '' && row[name] !== null && row[name] !== undefined) return row[name];
+      blankMatch = row[name];
+    }
+  }
+  const normalized = {};
+  Object.keys(row).forEach(key => { normalized[normalizeHeader(key)] = row[key]; });
+  for(const name of names) {
+    const key = normalizeHeader(name);
+    if(Object.prototype.hasOwnProperty.call(normalized, key)) {
+      if(normalized[key] !== '' && normalized[key] !== null && normalized[key] !== undefined) return normalized[key];
+      blankMatch = normalized[key];
+    }
+  }
+  return blankMatch;
+}
+
 function sheetDate(value) {
   const d = new Date(value);
   if(Number.isNaN(d.getTime())) return String(value);
@@ -1482,6 +1665,11 @@ function parseSheetDate(value) {
 
 function col(rows, key) {
   return rows.map(row => num(row[key]));
+}
+
+function sheetCol(rows, names, parser=num) {
+  const keys = Array.isArray(names) ? names : [names];
+  return rows.map(row => parser(rowValue(row, keys)));
 }
 
 function transformSalesRows(rows) {
@@ -1505,6 +1693,12 @@ function transformSalesRows(rows) {
     total_r2b_used: col(sortedRows, 'used_r2b_orders'),
     rentals_out: col(sortedRows, 'rentals_out'),
     rentals_in: col(sortedRows, 'rentals_in'),
+    r2b_returns: sumCols([
+      'r2b_returns_cardiff',
+      'r2b_returns_manchester',
+      'r2b_returns_shah_manchester',
+      'r2b_returns_birmingham'
+    ]),
     website_sales: col(sortedRows, 'website_sales'),
     net_rentals: col(sortedRows, 'net_rentals'),
     net_r2b: col(sortedRows, 'net_r2b'),
@@ -1591,6 +1785,203 @@ function transformSalesData(rowsByFleet) {
   return transformed;
 }
 
+function transformOpsRows(rows) {
+  const sortedRows = (rows || [])
+    .filter(row => row && rowValue(row, ['date', 'Date']))
+    .map(row => ({...row, _parsedDate: parseSheetDate(rowValue(row, ['date', 'Date']))}))
+    .filter(row => row._parsedDate)
+    .sort((a, b) => a._parsedDate - b._parsedDate)
+    .slice(-4);
+
+  if(!sortedRows.length) return DATA.ops;
+
+  const siteColumns = [
+    {label:'Ealing Broadway', names:['ealing_broadway']},
+    {label:'Colindale', names:['colindale']},
+    {label:'Ilford', names:['ilford']},
+    {label:'Manchester', names:['manchester']},
+    {label:'Birmingham', names:['birmingham']},
+    {label:'Shepherds Bush', names:['shepherds_bush']},
+    {label:'Cardiff', names:['cardiff']},
+    {label:'Hendon', names:['hendon']},
+    {label:'Dulwich', names:['dulwich']},
+    {label:'Northfields', names:['northfields']},
+    {label:'Sussex Place', names:['sussex_place']},
+    {label:'Kings Mall', names:['kings_mall']},
+    {label:'Brentford', names:['brentford']}
+  ];
+
+  const sites = {};
+  siteColumns.forEach(site => {
+    const values = sheetCol(sortedRows, site.names);
+    if(values.some(value => value !== 0)) sites[site.label] = values;
+  });
+
+  return {
+    weeks: sortedRows.map(row => sheetDate(row._parsedDate)),
+    dvla_fleet: zeroSeries(sortedRows.length).map((_, index) => DATA.ops.dvla_fleet[index] || DATA.ops.dvla_fleet[DATA.ops.dvla_fleet.length - 1] || 0),
+    live: sheetCol(sortedRows, ['live']),
+    ordway_live: sheetCol(sortedRows, ['live']),
+    available: sheetCol(sortedRows, ['available']),
+    in_servicing: sheetCol(sortedRows, ['in_servicing']),
+    courtesy_assigned: sheetCol(sortedRows, ['courtesy_assigned']),
+    courtesy_cars: sheetCol(sortedRows, ['courtesy_assigned']),
+    fleet_utilisation: sheetCol(sortedRows, ['fleet_utilisation_pct'], pctNum),
+    total_onsite: sheetCol(sortedRows, ['total_onsite_vehicles']),
+    total_onsite_vehicles: sheetCol(sortedRows, ['total_onsite_vehicles']),
+    sites
+  };
+}
+
+function transformOpsData(rowsByFleet) {
+  const transformed = {};
+  Object.keys(FLEET_VIEWS).forEach(fleet => {
+    transformed[fleet] = transformOpsRows(rowsByFleet && rowsByFleet[fleet]);
+  });
+  return transformed;
+}
+
+function transformFreshdeskRows(rows) {
+  const sortedRows = (rows || [])
+    .filter(row => row && rowValue(row, ['Date', 'date']))
+    .map(row => ({...row, _parsedDate: parseSheetDate(rowValue(row, ['Date', 'date']))}))
+    .filter(row => row._parsedDate)
+    .sort((a, b) => a._parsedDate - b._parsedDate)
+    .slice(-6);
+
+  if(!sortedRows.length) return DATA.freshdesk;
+
+  const queueColumns = [
+    {label:'Unassigned', names:['Unassigned']},
+    {label:'Birmingham', names:['BIRMINGHAM', 'Birmingham']},
+    {label:'Claims', names:['Claims']},
+    {label:'Complaints', names:['Complaints']},
+    {label:'Congestion', names:['Congestion']},
+    {label:'Credit Control', names:['Credit Control']},
+    {label:'Dashcam Project', names:['Dashcam Project']},
+    {label:'Driver Dev', names:['DRIVER DEV', 'Driver Dev']},
+    {label:'Holiday Requests', names:['Holiday Requests']},
+    {label:'Info', names:['Info']},
+    {label:'Insurance', names:['Insurance']},
+    {label:'PCN Team', names:['PCN Team']},
+    {label:'PHV', names:['PHV']},
+    {label:'Sales', names:['Sales']},
+    {label:'Servicing', names:['Servicing']},
+    {label:'Telesales', names:['TELESALES', 'Telesales']},
+    {label:'Manchester', names:['Manchester']},
+    {label:'WeFlex Q', names:['WEFLEX Q.', 'WEFLEX Q', 'WeFlex Q']}
+  ];
+
+  const categories = {};
+  const latest = sortedRows[sortedRows.length - 1];
+  const overdueByDept = {};
+  queueColumns.forEach(queue => {
+    const values = sheetCol(sortedRows, queue.names);
+    if(values.some(value => value !== 0)) {
+      categories[queue.label] = values;
+      overdueByDept[queue.label] = num(rowValue(latest, queue.names));
+    }
+  });
+
+  return {
+    weeks: sortedRows.map(row => sheetDate(row._parsedDate)),
+    overdue: sheetCol(sortedRows, ['OVERDUE TICKETS', 'overdue_tickets']),
+    total_open: sheetCol(sortedRows, ['Total unresolved Tickets', 'total_unresolved_tickets']),
+    received: sheetCol(sortedRows, ['Tickets Received', 'tickets_received']),
+    avg_first_response_hrs: sheetCol(sortedRows, ['Avg First Response', 'avg_first_response'], durationHours),
+    avg_resolution_hrs: sheetCol(sortedRows, ['Avg Resolution', 'avg_resolution'], durationHours),
+    fcr: sheetCol(sortedRows, ['FCR', 'fcr'], pctNum),
+    unassigned: sheetCol(sortedRows, ['Unassigned']),
+    overdue_by_dept: overdueByDept,
+    categories
+  };
+}
+
+function transformServicingRows(rows) {
+  const sortedRows = (rows || [])
+    .filter(row => row && rowValue(row, ['date', 'Date']))
+    .map(row => ({...row, _parsedDate: parseSheetDate(rowValue(row, ['date', 'Date']))}))
+    .filter(row => row._parsedDate)
+    .sort((a, b) => a._parsedDate - b._parsedDate)
+    .slice(-6);
+
+  if(!sortedRows.length) return DATA.servicing;
+
+  const makeColumns = [
+    {label:'MG', names:['mg']},
+    {label:'Polestar', names:['polestar']},
+    {label:'KIA', names:['kia']},
+    {label:'SKODA', names:['skoda']},
+    {label:'TESLA', names:['tesla']},
+    {label:'NISSAN', names:['nissan']},
+    {label:'TOYOTA', names:['toyota']},
+    {label:'HYUNDAI', names:['hyundai']},
+    {label:'VW', names:['volkswagen', 'vw']},
+    {label:'MERCEDES', names:['mercedes_benz', 'mercedes']}
+  ];
+
+  const siteColumns = [
+    {label:'Hendon', names:['hendon']},
+    {label:'Ilford', names:['ilford']},
+    {label:'Dulwich', names:['dulwich']},
+    {label:'Kings Mall', names:['kings_mall']},
+    {label:'Northfields', names:['northfields']},
+    {label:'Adams Workshop', names:['adams_workshop']},
+    {label:'Colindale', names:['colindale']},
+    {label:'Ealing Broadway', names:['ealing_broadway']},
+    {label:'Shepherds Bush', names:['shepherds_bush']},
+    {label:'Brentford', names:['brentford']},
+    {label:'Other', names:['other']}
+  ];
+
+  const statusColumns = [
+    {key:'northfields_yard', names:['Northfields Yard', 'northfields_yard']},
+    {key:'pending_workshop', names:['Pending Workshop', 'pending_workshop']},
+    {key:'available_courtesy', names:['Available Courtesy', 'available_courtesy']},
+    {key:'awaiting_customer_collection', names:['Awaiting Customer Collection', 'awaiting_customer_collection']},
+    {key:'panel_work_required', names:['Panel Work Required', 'panel_work_required']},
+    {key:'ready_for_sales', names:['Ready for Sales', 'ready_for_sales']},
+    {key:'waiting_phv_date', names:['Waiting for PHV Date', 'waiting_phv_date']},
+    {key:'other_status', names:['Other Status', 'other_status']}
+  ];
+
+  const makes = {};
+  makeColumns.forEach(make => {
+    const values = sheetCol(sortedRows, make.names);
+    if(values.some(value => value !== 0)) makes[make.label] = values;
+  });
+
+  const sites = {};
+  siteColumns.forEach(site => {
+    const values = sheetCol(sortedRows, site.names);
+    if(values.some(value => value !== 0)) sites[site.label] = values;
+  });
+
+  const result = {
+    weeks: sortedRows.map(row => sheetDate(row._parsedDate)),
+    count_in_servicing: sheetCol(sortedRows, ['in_servicing']),
+    pct_in_servicing: sheetCol(sortedRows, ['pct_fleet_in_servicing'], pctNum),
+    fleet_number: sheetCol(sortedRows, ['live']),
+    avg_days_offroad: sheetCol(sortedRows, ['avg_days_in_servicing']),
+    makes,
+    sites
+  };
+
+  statusColumns.forEach(status => {
+    result[status.key] = sheetCol(sortedRows, status.names);
+  });
+
+  return result;
+}
+
+function transformServicingData(rowsByFleet) {
+  const transformed = {};
+  Object.keys(FLEET_VIEWS).forEach(fleet => {
+    transformed[fleet] = transformServicingRows(rowsByFleet && rowsByFleet[fleet]);
+  });
+  return transformed;
+}
+
 function loadSalesData() {
   if(!window.google || !google.script || !google.script.run) {
     console.warn('Apps Script runtime not available. Using dummy sales data.');
@@ -1608,9 +1999,64 @@ function loadSalesData() {
     .getSalesData();
 }
 
+function loadOpsData() {
+  if(!window.google || !google.script || !google.script.run) {
+    console.warn('Apps Script runtime not available. Using dummy Ops data.');
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(rowsByFleet => {
+      DATA.opsByFleet = transformOpsData(rowsByFleet);
+      renderSection(currentSection);
+    })
+    .withFailureHandler(error => {
+      console.error('Failed to load Ops data', error);
+    })
+    .getOpsData();
+}
+
+function loadFreshdeskData() {
+  if(!window.google || !google.script || !google.script.run) {
+    console.warn('Apps Script runtime not available. Using dummy Freshdesk data.');
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(rows => {
+      DATA.freshdesk = transformFreshdeskRows(rows);
+      renderSection(currentSection);
+    })
+    .withFailureHandler(error => {
+      console.error('Failed to load Freshdesk data', error);
+    })
+    .getFreshdeskData();
+}
+
+function loadServicingData() {
+  if(!window.google || !google.script || !google.script.run) {
+    console.warn('Apps Script runtime not available. Using dummy Servicing data.');
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(rowsByFleet => {
+      DATA.servicingByFleet = transformServicingData(rowsByFleet);
+      renderSection(currentSection);
+    })
+    .withFailureHandler(error => {
+      console.error('Failed to load Servicing data', error);
+    })
+    .getServicingData();
+}
+
 // Initial render
+syncFleetUi();
 renderOps();
+loadOpsData();
 loadSalesData();
+loadFreshdeskData();
+loadServicingData();
 </script>
 </body>
 </html>
