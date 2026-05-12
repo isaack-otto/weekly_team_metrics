@@ -1,0 +1,3845 @@
+{
+  "name": "SALES",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const FLEET_FILTERS = {\n  all: null,\n  otto: ['OTTOCAR', 'LEUMI'],\n  weflex: ['LCM', 'TFS', 'TRIPLE-POINT'],\n  lcm: ['LCM'],\n  tfs: ['TFS'],\n  'triple-point': ['TRIPLE-POINT']\n};\n\nconst WEEKS_TO_RETURN = 1;\n\nfunction normaliseSource(str) {\n  return String(str || '')\n    .trim()\n    .toUpperCase()\n    .replace(/[_\\s]+/g, '-')\n    .replace(/--+/g, '-');\n}\n\nfunction getMostRecentFridayDate() {\n  const today = new Date();\n  const utcToday = new Date(Date.UTC(\n    today.getUTCFullYear(),\n    today.getUTCMonth(),\n    today.getUTCDate()\n  ));\n\n  const day = utcToday.getUTCDay();\n  const daysSinceFriday = (day + 2) % 7;\n\n  utcToday.setUTCDate(utcToday.getUTCDate() - daysSinceFriday);\n  utcToday.setUTCHours(0, 0, 0, 0);\n\n  return utcToday;\n}\n\nfunction formatDate(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nfunction getLastNFridays(count) {\n  const mostRecentFriday = getMostRecentFridayDate();\n  const weeks = [];\n\n  for (let i = count - 1; i >= 0; i--) {\n    const friday = new Date(mostRecentFriday);\n    friday.setUTCDate(mostRecentFriday.getUTCDate() - (i * 7));\n    weeks.push(formatDate(friday));\n  }\n\n  return weeks;\n}\n\nfunction getWeekBucketFriday(dateValue) {\n  if (!dateValue) return null;\n\n  const date = new Date(dateValue);\n  if (Number.isNaN(date.getTime())) return null;\n\n  const utcDate = new Date(Date.UTC(\n    date.getUTCFullYear(),\n    date.getUTCMonth(),\n    date.getUTCDate()\n  ));\n\n  const day = utcDate.getUTCDay();\n  const daysSinceMonday = (day + 6) % 7;\n\n  const monday = new Date(utcDate);\n  monday.setUTCDate(utcDate.getUTCDate() - daysSinceMonday);\n\n  const friday = new Date(monday);\n  friday.setUTCDate(monday.getUTCDate() + 4);\n\n  return formatDate(friday);\n}\n\nfunction sourceMatchesFleet(vehicleSource, fleetKey) {\n  const allowedSources = FLEET_FILTERS[fleetKey];\n  if (!allowedSources) return true;\n  return allowedSources.includes(vehicleSource);\n}\n\nfunction createCounts() {\n  return {\n    in_service_rentals_out: {}\n  };\n}\n\nfunction increment(bucket, week) {\n  bucket[week] = (bucket[week] || 0) + 1;\n}\n\nconst countsByFleet = Object.fromEntries(\n  Object.keys(FLEET_FILTERS).map(fleetKey => [fleetKey, createCounts()])\n);\n\nfor (const item of items) {\n  const row = item.json;\n\n  const startDate = row.start_date;\n  const vehicleSource = normaliseSource(row.vehicle_source);\n\n  if (!startDate) continue;\n\n  const weekEnding = getWeekBucketFriday(startDate);\n  if (!weekEnding) continue;\n\n  for (const fleetKey of Object.keys(FLEET_FILTERS)) {\n    if (!sourceMatchesFleet(vehicleSource, fleetKey)) continue;\n\n    increment(countsByFleet[fleetKey].in_service_rentals_out, weekEnding);\n  }\n}\n\nconst sharedWeeks = getLastNFridays(WEEKS_TO_RETURN);\nconst output = [];\n\nfor (const [fleetKey, counts] of Object.entries(countsByFleet)) {\n  for (const week of sharedWeeks) {\n    output.push({\n      json: {\n        _fleet: fleetKey,\n        Date: week,\n        in_service_rentals_out: counts.in_service_rentals_out[week] || 0\n      }\n    });\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -128
+      ],
+      "id": "b06abb4a-9912-4b08-8d88-63300a30413c",
+      "name": "Process In Service Rentals"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        -176
+      ],
+      "id": "c7328c5f-3f1f-4be6-a564-38313c1911c1",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const FLEET_FILTERS = {\n  all: null,\n  otto: ['OTTOCAR', 'LEUMI'],\n  weflex: ['LCM', 'TFS', 'TRIPLE-POINT'],\n  lcm: ['LCM'],\n  tfs: ['TFS'],\n  'triple-point': ['TRIPLE-POINT']\n};\n\nconst WEEKS_TO_RETURN = 1;\n\nfunction normaliseSource(str) {\n  return String(str || '')\n    .trim()\n    .toUpperCase()\n    .replace(/[_\\s]+/g, '-')\n    .replace(/--+/g, '-');\n}\n\nfunction sourceMatchesFleet(vehicleSource, fleetKey) {\n  const allowedSources = FLEET_FILTERS[fleetKey];\n  if (!allowedSources) return true;\n  return allowedSources.includes(vehicleSource);\n}\n\nfunction getMostRecentFridayDate() {\n  const today = new Date();\n  const utcToday = new Date(Date.UTC(\n    today.getUTCFullYear(),\n    today.getUTCMonth(),\n    today.getUTCDate()\n  ));\n\n  const day = utcToday.getUTCDay();\n  const daysSinceFriday = (day + 2) % 7;\n\n  utcToday.setUTCDate(utcToday.getUTCDate() - daysSinceFriday);\n  utcToday.setUTCHours(0, 0, 0, 0);\n\n  return utcToday;\n}\n\nfunction formatDate(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nfunction getLastNFridays(count) {\n  const mostRecentFriday = getMostRecentFridayDate();\n  const weeks = [];\n\n  for (let i = count - 1; i >= 0; i--) {\n    const friday = new Date(mostRecentFriday);\n    friday.setUTCDate(mostRecentFriday.getUTCDate() - (i * 7));\n    weeks.push(formatDate(friday));\n  }\n\n  return weeks;\n}\n\nfunction createCounts() {\n  return {\n    available_vehicles: 0,\n    available_vehicles_kings_mall: 0\n  };\n}\n\nconst countsByFleet = Object.fromEntries(\n  Object.keys(FLEET_FILTERS).map(fleetKey => [fleetKey, createCounts()])\n);\n\nfor (const item of items) {\n  const row = item.json;\n  const vehicleSource = normaliseSource(row.vehicle_source);\n  const branchName = row.branch_name ? String(row.branch_name).toUpperCase() : '';\n\n  for (const fleetKey of Object.keys(FLEET_FILTERS)) {\n    if (!sourceMatchesFleet(vehicleSource, fleetKey)) continue;\n\n    const counts = countsByFleet[fleetKey];\n    counts.available_vehicles += 1;\n\n    if (branchName.includes('KINGS MALL')) {\n      counts.available_vehicles_kings_mall += 1;\n    }\n  }\n}\n\nconst sharedWeeks = getLastNFridays(WEEKS_TO_RETURN);\nconst mostRecentFriday = sharedWeeks[sharedWeeks.length - 1];\n\nconst output = [];\n\nfor (const [fleetKey, counts] of Object.entries(countsByFleet)) {\n  for (const week of sharedWeeks) {\n    const isLatestWeek = week === mostRecentFriday;\n\n    output.push({\n      json: {\n        _fleet: fleetKey,\n        Date: week,\n        available_vehicles: isLatestWeek ? counts.available_vehicles : 0,\n        available_vehicles_kings_mall: isLatestWeek ? counts.available_vehicles_kings_mall : 0\n      }\n    });\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        80
+      ],
+      "id": "82141beb-3c14-4b0e-af6f-28d67528b44b",
+      "name": "Process Available Vehicles"
+    },
+    {
+      "parameters": {
+        "jsCode": "const FLEET_FILTERS = {\n  all: null,\n  otto: ['OTTOCAR', 'LEUMI'],\n  weflex: ['LCM', 'TFS', 'TRIPLE-POINT'],\n  lcm: ['LCM'],\n  tfs: ['TFS'],\n  'triple-point': ['TRIPLE-POINT']\n};\n\nconst WEEKS_TO_RETURN = 1\nconst MS_PER_DAY = 1000 * 60 * 60 * 24;\n\nfunction normaliseSource(str) {\n  return String(str || '')\n    .trim()\n    .toUpperCase()\n    .replace(/[_\\s]+/g, '-')\n    .replace(/--+/g, '-');\n}\n\nfunction sourceMatchesFleet(vehicleSource, fleetKey) {\n  const allowedSources = FLEET_FILTERS[fleetKey];\n  if (!allowedSources) return true;\n  return allowedSources.includes(vehicleSource);\n}\n\nfunction getMostRecentFridayDate() {\n  const today = new Date();\n  const utcToday = new Date(Date.UTC(\n    today.getUTCFullYear(),\n    today.getUTCMonth(),\n    today.getUTCDate()\n  ));\n\n  const day = utcToday.getUTCDay();\n  const daysSinceFriday = (day + 2) % 7;\n\n  utcToday.setUTCDate(utcToday.getUTCDate() - daysSinceFriday);\n  utcToday.setUTCHours(0, 0, 0, 0);\n\n  return utcToday;\n}\n\nfunction formatDate(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nfunction getLastNFridays(count) {\n  const mostRecentFriday = getMostRecentFridayDate();\n  const weeks = [];\n\n  for (let i = count - 1; i >= 0; i--) {\n    const friday = new Date(mostRecentFriday);\n    friday.setUTCDate(mostRecentFriday.getUTCDate() - (i * 7));\n    weeks.push(formatDate(friday));\n  }\n\n  return weeks;\n}\n\nfunction createAccumulator() {\n  return {\n    totalDays: 0,\n    count: 0\n  };\n}\n\nconst referenceDate = getMostRecentFridayDate();\n\nconst totalsByFleet = Object.fromEntries(\n  Object.keys(FLEET_FILTERS).map(fleetKey => [fleetKey, createAccumulator()])\n);\n\nfor (const item of items) {\n  const row = item.json;\n  const vehicleSource = normaliseSource(row.vehicle_source);\n\n  const changedAt = new Date(row.changed_at);\n  if (Number.isNaN(changedAt.getTime())) continue;\n\n  const days = (referenceDate - changedAt) / MS_PER_DAY;\n\n  for (const fleetKey of Object.keys(FLEET_FILTERS)) {\n    if (!sourceMatchesFleet(vehicleSource, fleetKey)) continue;\n\n    totalsByFleet[fleetKey].totalDays += days;\n    totalsByFleet[fleetKey].count += 1;\n  }\n}\n\nconst sharedWeeks = getLastNFridays(WEEKS_TO_RETURN);\nconst mostRecentFriday = sharedWeeks[sharedWeeks.length - 1];\n\nconst output = [];\n\nfor (const [fleetKey, totals] of Object.entries(totalsByFleet)) {\n  const avgDays = totals.count > 0 ? Number((totals.totalDays / totals.count).toFixed(2)) : 0;\n\n  for (const week of sharedWeeks) {\n    const isLatestWeek = week === mostRecentFriday;\n\n    output.push({\n      json: {\n        _fleet: fleetKey,\n        Date: week,\n        avg_days_off_road: isLatestWeek ? avgDays : 0\n      }\n    });\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        272
+      ],
+      "id": "bbe39313-c0ea-46a8-9639-8edc3574a246",
+      "name": "Process Avg Time off Road"
+    },
+    {
+      "parameters": {
+        "jsCode": "const FLEET_FILTERS = {\n  all: null,\n  otto: ['OTTOCAR', 'LEUMI'],\n  weflex: ['LCM', 'TFS', 'TRIPLE-POINT'],\n  lcm: ['LCM'],\n  tfs: ['TFS'],\n  'triple-point': ['TRIPLE-POINT']\n};\n\nconst DOWNPAYMENT_FIELD = 'downpayment_amount';\nconst DEPOSIT_FIELD = 'deposit';\nconst WEEKS_TO_RETURN = 1;\n\nconst BRANCH_GROUPS = {\n  hammersmith: new Set(['SHEPHERDS BUSH - GOLDHAWK RD']),\n  redbridge: new Set(['ILFORD', 'ILFORD - CLEMENTS ROAD CAR PARK']),\n  dulwich: new Set(['DULWICH']),\n  hendon_colindale: new Set([\n    'COLINDALE',\n    'COLINDALE - OTTO',\n    'COLINDALE / A2Z',\n    'HENDON'\n  ]),\n  cardiff: new Set(['CARDIFF']),\n  manchester: new Set(['MANCHESTER - OTTO', 'OTTO CAR - MANCHESTER']),\n  shah_manchester: new Set(['MANCHESTER']),\n  birmingham: new Set(['BIRMINGHAM', 'OTHER - BIRMINGHAM'])\n};\n\nfunction money(value) {\n  if (value === null || value === undefined || value === '') return 0;\n  if (typeof value === 'number') return value;\n\n  const cleaned = String(value)\n    .replace(/£/g, '')\n    .replace(/,/g, '')\n    .trim();\n\n  return Number(cleaned) || 0;\n}\n\nfunction normaliseType(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase()\n    .replace(/_/g, '-')\n    .replace(/\\s+/g, '-');\n}\n\nfunction normaliseSource(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase()\n    .replace(/_/g, '-')\n    .replace(/\\s+/g, '-');\n}\n\nfunction normaliseBranchName(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase()\n    .replace(/\\s+/g, ' ');\n}\n\nfunction normaliseStatus(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase();\n}\n\nfunction getMostRecentFridayDate() {\n  const today = new Date();\n  const utcToday = new Date(Date.UTC(\n    today.getUTCFullYear(),\n    today.getUTCMonth(),\n    today.getUTCDate()\n  ));\n\n  const day = utcToday.getUTCDay();\n  const daysSinceFriday = (day + 2) % 7;\n\n  utcToday.setUTCDate(utcToday.getUTCDate() - daysSinceFriday);\n  utcToday.setUTCHours(0, 0, 0, 0);\n\n  return utcToday;\n}\n\nfunction formatDate(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nfunction getLastNFridays(count) {\n  const mostRecentFriday = getMostRecentFridayDate();\n  const weeks = [];\n\n  for (let i = count - 1; i >= 0; i--) {\n    const friday = new Date(mostRecentFriday);\n    friday.setUTCDate(mostRecentFriday.getUTCDate() - (i * 7));\n    weeks.push(formatDate(friday));\n  }\n\n  return weeks;\n}\n\nfunction getWeekBucketFriday(dateValue) {\n  if (!dateValue) return null;\n\n  const date = new Date(dateValue);\n  if (Number.isNaN(date.getTime())) return null;\n\n  const utcDate = new Date(Date.UTC(\n    date.getUTCFullYear(),\n    date.getUTCMonth(),\n    date.getUTCDate()\n  ));\n\n  const day = utcDate.getUTCDay();\n  const daysSinceMonday = (day + 6) % 7;\n\n  const monday = new Date(utcDate);\n  monday.setUTCDate(utcDate.getUTCDate() - daysSinceMonday);\n\n  const friday = new Date(monday);\n  friday.setUTCDate(monday.getUTCDate() + 4);\n\n  return formatDate(friday);\n}\n\nfunction normaliseBranchGroup(branchName) {\n  const normalised = normaliseBranchName(branchName);\n\n  for (const [group, names] of Object.entries(BRANCH_GROUPS)) {\n    if (names.has(normalised)) return group;\n  }\n\n  return null;\n}\n\nfunction isCompletedDownpayment(row) {\n  return normaliseStatus(row.downpayment_status) === 'SUCCEEDED';\n}\n\nfunction isValidSale(row) {\n  const downpayment = money(row[DOWNPAYMENT_FIELD]);\n  const deposit = money(row[DEPOSIT_FIELD]);\n\n  return downpayment > (0.5 * deposit);\n}\n\nfunction isR2BType(type) {\n  return (\n    type.includes('R2B') ||\n    type.includes('RENT-TO-BUY') ||\n    type.includes('RENT TO BUY')\n  );\n}\n\nfunction isInServiceRentalType(type) {\n  return type.includes('IN-SERVICE-RENTAL');\n}\n\nfunction isRentalType(type) {\n  return type.includes('RENTAL') && !isInServiceRentalType(type);\n}\n\nfunction sourceMatchesFleet(vehicleSource, fleetKey) {\n  const allowedSources = FLEET_FILTERS[fleetKey];\n\n  if (!allowedSources) return true;\n\n  return allowedSources.includes(vehicleSource);\n}\n\nfunction increment(bucket, week) {\n  bucket[week] = (bucket[week] || 0) + 1;\n}\n\nfunction createWeekCounts() {\n  return {\n    new_r2b_orders: {},\n    used_r2b_orders: {},\n    rentals_out: {},\n    in_service_rentals_out: {},\n\n    rentals_out_hyundai: {},\n    rentals_out_kia: {},\n    rentals_out_mercedes: {},\n    rentals_out_mg: {},\n    rentals_out_nissan: {},\n    rentals_out_skoda: {},\n    rentals_out_tesla: {},\n    rentals_out_toyota: {},\n    rentals_out_vw: {},\n    rentals_out_polestar: {},\n\n    rentals_out_hammersmith: {},\n    new_r2b_hammersmith: {},\n    used_r2b_hammersmith: {},\n\n    rentals_out_redbridge: {},\n    new_r2b_redbridge: {},\n    used_r2b_redbridge: {},\n\n    rentals_out_dulwich: {},\n    new_r2b_dulwich: {},\n    used_r2b_dulwich: {},\n\n    rentals_out_hendon_colindale: {},\n    new_r2b_hendon_colindale: {},\n    used_r2b_hendon_colindale: {},\n\n    rentals_out_cardiff: {},\n    new_r2b_cardiff: {},\n    used_r2b_cardiff: {},\n\n    rentals_out_manchester: {},\n    new_r2b_manchester: {},\n    used_r2b_manchester: {},\n\n    rentals_out_shah_manchester: {},\n    new_r2b_shah_manchester: {},\n    used_r2b_shah_manchester: {},\n\n    rentals_out_birmingham: {},\n    new_r2b_birmingham: {},\n    used_r2b_birmingham: {}\n  };\n}\n\nconst countsByFleet = Object.fromEntries(\n  Object.keys(FLEET_FILTERS).map(fleetKey => [fleetKey, createWeekCounts()])\n);\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (!isCompletedDownpayment(row)) continue;\n  if (!isValidSale(row)) continue;\n\n  const vehicleSource = normaliseSource(row.vehicle_source);\n  const applicationType = normaliseType(row.application_type);\n  const updatedDate = row.updated_date;\n  const branchGroup = normaliseBranchGroup(row.branch_name);\n  const manufacturerRaw = row.manufacturer;\n  const agreementCount = Number(row.agreement_count);\n\n  if (!applicationType || !updatedDate) continue;\n\n  const weekEnding = getWeekBucketFriday(updatedDate);\n  if (!weekEnding) continue;\n\n  const manufacturer = manufacturerRaw\n    ? String(manufacturerRaw).trim().toUpperCase()\n    : null;\n\n  const isNew = agreementCount <= 1;\n  const isUsed = agreementCount > 1;\n\n  const isR2B = isR2BType(applicationType);\n  const isRental = isRentalType(applicationType);\n  const isInServiceRental = isInServiceRentalType(applicationType);\n\n  for (const fleetKey of Object.keys(FLEET_FILTERS)) {\n    if (!sourceMatchesFleet(vehicleSource, fleetKey)) continue;\n\n    const counts = countsByFleet[fleetKey];\n\n    if (isR2B && isNew) increment(counts.new_r2b_orders, weekEnding);\n    if (isR2B && isUsed) increment(counts.used_r2b_orders, weekEnding);\n    if (isRental) increment(counts.rentals_out, weekEnding);\n    if (isInServiceRental) increment(counts.in_service_rentals_out, weekEnding);\n\n    if (isRental && manufacturer) {\n      if (manufacturer === 'HYUNDAI') increment(counts.rentals_out_hyundai, weekEnding);\n      if (manufacturer === 'KIA') increment(counts.rentals_out_kia, weekEnding);\n      if (manufacturer === 'MERCEDES' || manufacturer === 'MERCEDES-BENZ') increment(counts.rentals_out_mercedes, weekEnding);\n      if (manufacturer === 'MG') increment(counts.rentals_out_mg, weekEnding);\n      if (manufacturer === 'NISSAN') increment(counts.rentals_out_nissan, weekEnding);\n      if (manufacturer === 'SKODA') increment(counts.rentals_out_skoda, weekEnding);\n      if (manufacturer === 'TESLA') increment(counts.rentals_out_tesla, weekEnding);\n      if (manufacturer === 'TOYOTA') increment(counts.rentals_out_toyota, weekEnding);\n      if (manufacturer === 'VW' || manufacturer === 'VOLKSWAGEN') increment(counts.rentals_out_vw, weekEnding);\n      if (manufacturer === 'POLESTAR') increment(counts.rentals_out_polestar, weekEnding);\n    }\n\n    if (branchGroup) {\n      if (isRental) increment(counts[`rentals_out_${branchGroup}`], weekEnding);\n      if (isR2B && isNew) increment(counts[`new_r2b_${branchGroup}`], weekEnding);\n      if (isR2B && isUsed) increment(counts[`used_r2b_${branchGroup}`], weekEnding);\n    }\n  }\n}\n\nconst sharedWeeks = getLastNFridays(WEEKS_TO_RETURN);\nconst output = [];\n\nfor (const [fleetKey, counts] of Object.entries(countsByFleet)) {\n  for (const week of sharedWeeks) {\n    output.push({\n      json: {\n        _fleet: fleetKey,\n        Date: week,\n\n        rentals_in: null,\n        net_rentals: null,\n        net_r2b: null,\n        available_vehicles: null,\n        available_vehicles_kings_mall: null,\n        avg_days_off_road: null,\n\n        r2b_returns_cardiff: null,\n        r2b_returns_manchester: null,\n        r2b_returns_shah_manchester: null,\n        r2b_returns_birmingham: null,\n\n        ...Object.fromEntries(\n          Object.entries(counts).map(([key, values]) => [key, values[week] || 0])\n        )\n      }\n    });\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        -480
+      ],
+      "id": "aadfdc2c-73b1-45f8-bf5f-e5af033feaad",
+      "name": "Process Orders Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "const FLEET_FILTERS = {\n  all: null,\n  otto: ['OTTOCAR', 'LEUMI'],\n  weflex: ['LCM', 'TFS', 'TRIPLE-POINT'],\n  lcm: ['LCM'],\n  tfs: ['TFS'],\n  'triple-point': ['TRIPLE-POINT']\n};\n\nconst WEEKS_TO_RETURN = 1;\n\nconst BRANCH_GROUPS = {\n  hammersmith: new Set(['SHEPHERDS BUSH - GOLDHAWK RD']),\n  redbridge: new Set(['ILFORD', 'ILFORD - CLEMENTS ROAD CAR PARK']),\n  dulwich: new Set(['DULWICH']),\n  hendon_colindale: new Set([\n    'COLINDALE',\n    'COLINDALE - OTTO',\n    'COLINDALE / A2Z',\n    'HENDON'\n  ]),\n  cardiff: new Set(['CARDIFF']),\n  manchester: new Set(['MANCHESTER - OTTO', 'OTTO CAR - MANCHESTER']),\n  shah_manchester: new Set(['MANCHESTER']),\n  birmingham: new Set(['BIRMINGHAM', 'OTHER - BIRMINGHAM'])\n};\n\nfunction getMostRecentFridayDate() {\n  const today = new Date();\n  const utcToday = new Date(Date.UTC(\n    today.getUTCFullYear(),\n    today.getUTCMonth(),\n    today.getUTCDate()\n  ));\n\n  const day = utcToday.getUTCDay();\n  const daysSinceFriday = (day + 2) % 7;\n\n  utcToday.setUTCDate(utcToday.getUTCDate() - daysSinceFriday);\n  utcToday.setUTCHours(0, 0, 0, 0);\n\n  return utcToday;\n}\n\nfunction formatDate(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nfunction getLastNFridays(count) {\n  const mostRecentFriday = getMostRecentFridayDate();\n  const weeks = [];\n\n  for (let i = count - 1; i >= 0; i--) {\n    const friday = new Date(mostRecentFriday);\n    friday.setUTCDate(mostRecentFriday.getUTCDate() - (i * 7));\n    weeks.push(formatDate(friday));\n  }\n\n  return weeks;\n}\n\nfunction getWeekBucketFriday(dateValue) {\n  if (!dateValue) return null;\n\n  const date = new Date(dateValue);\n  if (Number.isNaN(date.getTime())) return null;\n\n  const utcDate = new Date(Date.UTC(\n    date.getUTCFullYear(),\n    date.getUTCMonth(),\n    date.getUTCDate()\n  ));\n\n  const day = utcDate.getUTCDay();\n  const daysSinceMonday = (day + 6) % 7;\n\n  const monday = new Date(utcDate);\n  monday.setUTCDate(utcDate.getUTCDate() - daysSinceMonday);\n\n  const friday = new Date(monday);\n  friday.setUTCDate(monday.getUTCDate() + 4);\n\n  return formatDate(friday);\n}\n\nfunction normaliseType(str) {\n  return String(str || '')\n    .trim()\n    .toUpperCase()\n    .replace(/[_\\s]+/g, '-')\n    .replace(/--+/g, '-');\n}\n\nfunction normaliseSource(str) {\n  return String(str || '')\n    .trim()\n    .toUpperCase()\n    .replace(/[_\\s]+/g, '-')\n    .replace(/--+/g, '-');\n}\n\nfunction normaliseBranchName(str) {\n  return String(str || '')\n    .trim()\n    .toUpperCase()\n    .replace(/\\s+/g, ' ');\n}\n\nfunction isR2BType(type) {\n  return (\n    type.includes('R2B') ||\n    type.includes('RENT-TO-BUY') ||\n    type.includes('RENT TO BUY')\n  );\n}\n\nfunction isRentalType(type) {\n  return type.includes('RENTAL') && !type.includes('IN-SERVICE');\n}\n\nfunction isInServiceRentalType(type) {\n  return type.includes('IN-SERVICE-RENTAL');\n}\n\nfunction normaliseBranchGroup(branchNameRaw) {\n  const branchName = normaliseBranchName(branchNameRaw);\n\n  for (const [groupName, branchSet] of Object.entries(BRANCH_GROUPS)) {\n    if (branchSet.has(branchName)) return groupName;\n  }\n\n  return null;\n}\n\nfunction sourceMatchesFleet(vehicleSource, fleetKey) {\n  const allowedSources = FLEET_FILTERS[fleetKey];\n  if (!allowedSources) return true;\n  return allowedSources.includes(vehicleSource);\n}\n\nfunction increment(obj, key) {\n  obj[key] = (obj[key] || 0) + 1;\n}\n\nfunction createCounts() {\n  return {\n    rentals_in: {},\n\n    rentals_in_hammersmith: {},\n    rentals_in_redbridge: {},\n    rentals_in_dulwich: {},\n    rentals_in_hendon_colindale: {},\n\n    r2b_returns: {},\n    r2b_returns_cardiff: {},\n    r2b_returns_manchester: {},\n    r2b_returns_shah_manchester: {},\n    r2b_returns_birmingham: {}\n  };\n}\n\nconst countsByFleet = Object.fromEntries(\n  Object.keys(FLEET_FILTERS).map(fleetKey => [fleetKey, createCounts()])\n);\n\nfor (const item of items) {\n  const row = item.json;\n\n  const agreementType = normaliseType(row.agreement_type);\n  const inDate = row.in_date;\n  const vehicleSource = normaliseSource(row.vehicle_source);\n  const branchGroup = normaliseBranchGroup(row.branch_name);\n\n  if (!agreementType || !inDate) continue;\n\n  const weekEnding = getWeekBucketFriday(inDate);\n  if (!weekEnding) continue;\n\n  const isRental = isRentalType(agreementType);\n  const isR2B = isR2BType(agreementType);\n\n  for (const fleetKey of Object.keys(FLEET_FILTERS)) {\n    if (!sourceMatchesFleet(vehicleSource, fleetKey)) continue;\n\n    const counts = countsByFleet[fleetKey];\n\n    if (isRental) {\n      increment(counts.rentals_in, weekEnding);\n\n      if (branchGroup === 'hammersmith') increment(counts.rentals_in_hammersmith, weekEnding);\n      if (branchGroup === 'redbridge') increment(counts.rentals_in_redbridge, weekEnding);\n      if (branchGroup === 'dulwich') increment(counts.rentals_in_dulwich, weekEnding);\n      if (branchGroup === 'hendon_colindale') increment(counts.rentals_in_hendon_colindale, weekEnding);\n    }\n\n    if (isR2B) {\n      increment(counts.r2b_returns, weekEnding);\n\n      if (branchGroup === 'cardiff') increment(counts.r2b_returns_cardiff, weekEnding);\n      if (branchGroup === 'manchester') increment(counts.r2b_returns_manchester, weekEnding);\n      if (branchGroup === 'shah_manchester') increment(counts.r2b_returns_shah_manchester, weekEnding);\n      if (branchGroup === 'birmingham') increment(counts.r2b_returns_birmingham, weekEnding);\n    }\n  }\n}\n\nconst sharedWeeks = getLastNFridays(WEEKS_TO_RETURN);\nconst output = [];\n\nfor (const [fleetKey, counts] of Object.entries(countsByFleet)) {\n  for (const week of sharedWeeks) {\n    output.push({\n      json: {\n        _fleet: fleetKey,\n        Date: week,\n\n        rentals_in: counts.rentals_in[week] || 0,\n\n        rentals_in_hammersmith: counts.rentals_in_hammersmith[week] || 0,\n        rentals_in_redbridge: counts.rentals_in_redbridge[week] || 0,\n        rentals_in_dulwich: counts.rentals_in_dulwich[week] || 0,\n        rentals_in_hendon_colindale: counts.rentals_in_hendon_colindale[week] || 0,\n\n        r2b_returns: counts.r2b_returns[week] || 0,\n        r2b_returns_cardiff: counts.r2b_returns_cardiff[week] || 0,\n        r2b_returns_manchester: counts.r2b_returns_manchester[week] || 0,\n        r2b_returns_shah_manchester: counts.r2b_returns_shah_manchester[week] || 0,\n        r2b_returns_birmingham: counts.r2b_returns_birmingham[week] || 0\n      }\n    });\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -320
+      ],
+      "id": "1749b6ff-027d-44a1-95db-955e46e6f334",
+      "name": "Process Orders In"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH ordered_history AS (\n    SELECT\n        vsh.vehicle_id,\n        vsh.vehicle_status,\n        vsh.vehicle_status_old,\n        vsh.changed_at,\n        ROW_NUMBER() OVER (\n            PARTITION BY vsh.vehicle_id\n            ORDER BY vsh.changed_at DESC\n        ) AS rn,\n        SUM(\n            CASE\n                WHEN vsh.vehicle_status NOT IN (\n                    'ASSIGNED',\n                    'PRE-ASSIGNED',\n                    'ORDERED',\n                    'AWAITING-EVALUATION',\n                    'AVAILABLE'\n                ) THEN 1\n                ELSE 0\n            END\n        ) OVER (\n            PARTITION BY vsh.vehicle_id\n            ORDER BY vsh.changed_at DESC\n            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n        ) AS break_count\n    FROM pulse.vehicle_status_history vsh\n),\n\neligible_vehicles AS (\n    SELECT vehicle_id\n    FROM ordered_history\n    WHERE rn = 1\n      AND vehicle_status IN (\n          'AVAILABLE'\n      )\n),\n\nlatest_chain AS (\n    SELECT oh.*\n    FROM ordered_history oh\n    JOIN eligible_vehicles ev\n      ON ev.vehicle_id = oh.vehicle_id\n    WHERE oh.break_count = 0\n),\n\nchain_entry AS (\n    SELECT DISTINCT ON (vehicle_id)\n        vehicle_id,\n        vehicle_status,\n        vehicle_status_old,\n        changed_at\n    FROM latest_chain\n    ORDER BY vehicle_id, changed_at ASC\n)\n\nSELECT\n    v.vrm,\n    v.vehicle_source,\n    vt.manufacturer,\n    vt.model,\n    b.branch_name,\n    ce.changed_at,\n    ce.vehicle_status,\n    ce.vehicle_status_old\nFROM chain_entry ce\nLEFT JOIN pulse.vehicle v\n    ON v.id = ce.vehicle_id\nLEFT JOIN pulse.vehicle_type vt\n    ON vt.id = v.vehicle_type_id\nLEFT JOIN pulse.branch b\n    ON b.id = v.branch_id\nORDER BY v.vrm;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -688,
+        272
+      ],
+      "id": "695376d2-1065-4d96-8209-6f31aedcc0f5",
+      "name": "Avg time off road",
+      "credentials": {
+        "postgres": {
+          "id": "fo3dwHGlB14oR0XK",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  v.vrm,\n  v.vehicle_status,\n  v.vehicle_source,\n\n  vt.manufacturer,\n  vt.model,\n\n  b.branch_name\n\n  FROM pulse.vehicle v\n\n  LEFT JOIN pulse.vehicle_type vt\n    ON vt.id = v.vehicle_type_id\n\n  LEFT JOIN pulse.branch b\n    ON b.id = v.physical_branch_id\n\nWHERE vehicle_status IN ('AVAILABLE')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -688,
+        80
+      ],
+      "id": "d3875e5f-3576-49b1-99b9-12dcbeb44557",
+      "name": "Available Vehicles",
+      "credentials": {
+        "postgres": {
+          "id": "fo3dwHGlB14oR0XK",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM pulse.agreement WHERE agreement_type='IN-SERVICE-RENTAL'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -688,
+        -128
+      ],
+      "id": "7e7b58dd-a1a3-4102-9783-5bfb86c77d27",
+      "name": "In Service Rentals",
+      "credentials": {
+        "postgres": {
+          "id": "fo3dwHGlB14oR0XK",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n\n\tt.reason,\n\tt.in_date,\n\n\ta.agreement_type,\n\ta.vehicle_source,\n\n\tb.branch_name\n\nFROM pulse.transfer t\n\nLEFT JOIN pulse.agreement a\n\tON a.id = t.agreement_id\n\nLEFT JOIN pulse.branch b\n\tON a.branch_id = b.id\n\nWHERE t.reason ILIKE '%term%'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -688,
+        -320
+      ],
+      "id": "e04c0108-208f-48fd-9f82-a91039fa9393",
+      "name": "Orders In",
+      "credentials": {
+        "postgres": {
+          "id": "fo3dwHGlB14oR0XK",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH agreement_counts AS (\n    SELECT\n        vehicle_id,\n        COUNT(*) AS agreement_count\n    FROM pulse.agreement\n    WHERE vehicle_id IS NOT NULL\n    GROUP BY vehicle_id\n)\n\nSELECT\n    -- Application\n    a.branch_id,\n    b.branch_name,\n    a.vehicle_id,\n    a.driver_id,\n    a.employee_id,\n    a.application_type,\n    a.application_status,\n    a.downpayment_amount,\n    a.downpayment_status,\n    a.agreement_value_weeks,\n    a.agreement_length_weeks,\n    a.deposit,\n    a.total_due,\n    a.vat_value,\n    a.vehicle_source,\n    a.downpayment_order_id,\n    a.final_downpayment_order_id,\n    ch.updated_date,\n\n    -- Derived from agreement table\n    COALESCE(ac.agreement_count, 0) AS agreement_count,\n\n    -- Vehicle\n    v.condition,\n    v.used,\n    v.vehicle_type_id,\n    v.vrm,\n\n    -- Vehicle Type\n    vt.manufacturer,\n    vt.model\n\nFROM pulse.application a\n\nLEFT JOIN pulse.branch b\n    ON a.branch_id = b.id\n\nLEFT JOIN pulse.vehicle v\n    ON a.vehicle_id = v.id\n\nLEFT JOIN pulse.vehicle_type vt\n    ON v.vehicle_type_id = vt.id\n\nJOIN pulse.charge ch\n    ON a.downpayment_order_id = ch.ordway_order_id\n\nLEFT JOIN agreement_counts ac\n    ON a.vehicle_id = ac.vehicle_id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1136,
+        -480
+      ],
+      "id": "f95d7a4d-bdf5-46ae-97ad-cc64c6de6fe9",
+      "name": "Orders Out",
+      "credentials": {
+        "postgres": {
+          "id": "fo3dwHGlB14oR0XK",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_FLEET = 'otto';\n\nconst DEFAULT_ROW = {\n  Date: null,\n\n  new_r2b_orders: 0,\n  used_r2b_orders: 0,\n  rentals_out: 0,\n  in_service_rentals_out: 0,\n\n  website_reservations: 0,\n  website_sales: 0,\n\n  rentals_out_hyundai: 0,\n  rentals_out_kia: 0,\n  rentals_out_mercedes: 0,\n  rentals_out_mg: 0,\n  rentals_out_nissan: 0,\n  rentals_out_skoda: 0,\n  rentals_out_tesla: 0,\n  rentals_out_toyota: 0,\n  rentals_out_vw: 0,\n  rentals_out_polestar: 0,\n\n  rentals_out_hammersmith: 0,\n  new_r2b_hammersmith: 0,\n  used_r2b_hammersmith: 0,\n\n  rentals_out_redbridge: 0,\n  new_r2b_redbridge: 0,\n  used_r2b_redbridge: 0,\n\n  rentals_out_dulwich: 0,\n  new_r2b_dulwich: 0,\n  used_r2b_dulwich: 0,\n\n  rentals_out_hendon_colindale: 0,\n  new_r2b_hendon_colindale: 0,\n  used_r2b_hendon_colindale: 0,\n\n  rentals_out_cardiff: 0,\n  new_r2b_cardiff: 0,\n  used_r2b_cardiff: 0,\n\n  rentals_out_manchester: 0,\n  new_r2b_manchester: 0,\n  used_r2b_manchester: 0,\n\n  rentals_out_shah_manchester: 0,\n  new_r2b_shah_manchester: 0,\n  used_r2b_shah_manchester: 0,\n\n  rentals_out_birmingham: 0,\n  new_r2b_birmingham: 0,\n  used_r2b_birmingham: 0,\n\n  rentals_in: 0,\n  rentals_in_hammersmith: 0,\n  rentals_in_redbridge: 0,\n  rentals_in_dulwich: 0,\n  rentals_in_hendon_colindale: 0,\n\n  r2b_returns: 0,\n  r2b_returns_cardiff: 0,\n  r2b_returns_manchester: 0,\n  r2b_returns_shah_manchester: 0,\n  r2b_returns_birmingham: 0,\n\n  available_vehicles: 0,\n  available_vehicles_kings_mall: 0,\n  avg_days_off_road: 0,\n\n  net_rentals: 0,\n  net_r2b: 0\n};\n\nconst mergedByDate = {};\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (row._fleet !== TARGET_FLEET) continue;\n  if (!row.Date) continue;\n\n  if (!mergedByDate[row.Date]) {\n    mergedByDate[row.Date] = { ...DEFAULT_ROW, Date: row.Date };\n  }\n\n  for (const [key, value] of Object.entries(row)) {\n    if (key === '_fleet' || key === 'Date') continue;\n    mergedByDate[row.Date][key] = value;\n  }\n}\n\nfor (const row of Object.values(mergedByDate)) {\n  row.r2b_returns =\n    (row.r2b_returns_cardiff || 0) +\n    (row.r2b_returns_manchester || 0) +\n    (row.r2b_returns_shah_manchester || 0) +\n    (row.r2b_returns_birmingham || 0);\n\n  row.net_rentals = (row.rentals_out || 0) - (row.rentals_in || 0);\n\n  row.net_r2b =\n    ((row.new_r2b_orders || 0) + (row.used_r2b_orders || 0)) -\n    (row.r2b_returns || 0);\n}\n\nreturn Object.values(mergedByDate)\n  .sort((a, b) => a.Date.localeCompare(b.Date))\n  .map(json => ({ json }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -480
+      ],
+      "id": "77f72379-1c1a-4fbd-b6f7-240738c4bb48",
+      "name": "Sales Data - Otto"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_FLEET = 'weflex';\n\nconst DEFAULT_ROW = {\n  Date: null,\n\n  new_r2b_orders: 0,\n  used_r2b_orders: 0,\n  rentals_out: 0,\n  in_service_rentals_out: 0,\n\n  website_reservations: 0,\n  website_sales: 0,\n\n  rentals_out_hyundai: 0,\n  rentals_out_kia: 0,\n  rentals_out_mercedes: 0,\n  rentals_out_mg: 0,\n  rentals_out_nissan: 0,\n  rentals_out_skoda: 0,\n  rentals_out_tesla: 0,\n  rentals_out_toyota: 0,\n  rentals_out_vw: 0,\n  rentals_out_polestar: 0,\n\n  rentals_out_hammersmith: 0,\n  new_r2b_hammersmith: 0,\n  used_r2b_hammersmith: 0,\n\n  rentals_out_redbridge: 0,\n  new_r2b_redbridge: 0,\n  used_r2b_redbridge: 0,\n\n  rentals_out_dulwich: 0,\n  new_r2b_dulwich: 0,\n  used_r2b_dulwich: 0,\n\n  rentals_out_hendon_colindale: 0,\n  new_r2b_hendon_colindale: 0,\n  used_r2b_hendon_colindale: 0,\n\n  rentals_out_cardiff: 0,\n  new_r2b_cardiff: 0,\n  used_r2b_cardiff: 0,\n\n  rentals_out_manchester: 0,\n  new_r2b_manchester: 0,\n  used_r2b_manchester: 0,\n\n  rentals_out_shah_manchester: 0,\n  new_r2b_shah_manchester: 0,\n  used_r2b_shah_manchester: 0,\n\n  rentals_out_birmingham: 0,\n  new_r2b_birmingham: 0,\n  used_r2b_birmingham: 0,\n\n  rentals_in: 0,\n  rentals_in_hammersmith: 0,\n  rentals_in_redbridge: 0,\n  rentals_in_dulwich: 0,\n  rentals_in_hendon_colindale: 0,\n\n  r2b_returns: 0,\n  r2b_returns_cardiff: 0,\n  r2b_returns_manchester: 0,\n  r2b_returns_shah_manchester: 0,\n  r2b_returns_birmingham: 0,\n\n  available_vehicles: 0,\n  available_vehicles_kings_mall: 0,\n  avg_days_off_road: 0,\n\n  net_rentals: 0,\n  net_r2b: 0\n};\n\nconst mergedByDate = {};\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (row._fleet !== TARGET_FLEET) continue;\n  if (!row.Date) continue;\n\n  if (!mergedByDate[row.Date]) {\n    mergedByDate[row.Date] = { ...DEFAULT_ROW, Date: row.Date };\n  }\n\n  for (const [key, value] of Object.entries(row)) {\n    if (key === '_fleet' || key === 'Date') continue;\n    mergedByDate[row.Date][key] = value;\n  }\n}\n\nfor (const row of Object.values(mergedByDate)) {\n  row.r2b_returns =\n    (row.r2b_returns_cardiff || 0) +\n    (row.r2b_returns_manchester || 0) +\n    (row.r2b_returns_shah_manchester || 0) +\n    (row.r2b_returns_birmingham || 0);\n\n  row.net_rentals = (row.rentals_out || 0) - (row.rentals_in || 0);\n\n  row.net_r2b =\n    ((row.new_r2b_orders || 0) + (row.used_r2b_orders || 0)) -\n    (row.r2b_returns || 0);\n}\n\nreturn Object.values(mergedByDate)\n  .sort((a, b) => a.Date.localeCompare(b.Date))\n  .map(json => ({ json }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -288
+      ],
+      "id": "744dafb0-7bf9-4603-8abf-5181638a39a0",
+      "name": "Sales Data - WeFlex"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_FLEET = 'lcm';\n\nconst DEFAULT_ROW = {\n  Date: null,\n\n  new_r2b_orders: 0,\n  used_r2b_orders: 0,\n  rentals_out: 0,\n  in_service_rentals_out: 0,\n\n  website_reservations: 0,\n  website_sales: 0,\n\n  rentals_out_hyundai: 0,\n  rentals_out_kia: 0,\n  rentals_out_mercedes: 0,\n  rentals_out_mg: 0,\n  rentals_out_nissan: 0,\n  rentals_out_skoda: 0,\n  rentals_out_tesla: 0,\n  rentals_out_toyota: 0,\n  rentals_out_vw: 0,\n  rentals_out_polestar: 0,\n\n  rentals_out_hammersmith: 0,\n  new_r2b_hammersmith: 0,\n  used_r2b_hammersmith: 0,\n\n  rentals_out_redbridge: 0,\n  new_r2b_redbridge: 0,\n  used_r2b_redbridge: 0,\n\n  rentals_out_dulwich: 0,\n  new_r2b_dulwich: 0,\n  used_r2b_dulwich: 0,\n\n  rentals_out_hendon_colindale: 0,\n  new_r2b_hendon_colindale: 0,\n  used_r2b_hendon_colindale: 0,\n\n  rentals_out_cardiff: 0,\n  new_r2b_cardiff: 0,\n  used_r2b_cardiff: 0,\n\n  rentals_out_manchester: 0,\n  new_r2b_manchester: 0,\n  used_r2b_manchester: 0,\n\n  rentals_out_shah_manchester: 0,\n  new_r2b_shah_manchester: 0,\n  used_r2b_shah_manchester: 0,\n\n  rentals_out_birmingham: 0,\n  new_r2b_birmingham: 0,\n  used_r2b_birmingham: 0,\n\n  rentals_in: 0,\n  rentals_in_hammersmith: 0,\n  rentals_in_redbridge: 0,\n  rentals_in_dulwich: 0,\n  rentals_in_hendon_colindale: 0,\n\n  r2b_returns: 0,\n  r2b_returns_cardiff: 0,\n  r2b_returns_manchester: 0,\n  r2b_returns_shah_manchester: 0,\n  r2b_returns_birmingham: 0,\n\n  available_vehicles: 0,\n  available_vehicles_kings_mall: 0,\n  avg_days_off_road: 0,\n\n  net_rentals: 0,\n  net_r2b: 0\n};\n\nconst mergedByDate = {};\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (row._fleet !== TARGET_FLEET) continue;\n  if (!row.Date) continue;\n\n  if (!mergedByDate[row.Date]) {\n    mergedByDate[row.Date] = { ...DEFAULT_ROW, Date: row.Date };\n  }\n\n  for (const [key, value] of Object.entries(row)) {\n    if (key === '_fleet' || key === 'Date') continue;\n    mergedByDate[row.Date][key] = value;\n  }\n}\n\nfor (const row of Object.values(mergedByDate)) {\n  row.r2b_returns =\n    (row.r2b_returns_cardiff || 0) +\n    (row.r2b_returns_manchester || 0) +\n    (row.r2b_returns_shah_manchester || 0) +\n    (row.r2b_returns_birmingham || 0);\n\n  row.net_rentals = (row.rentals_out || 0) - (row.rentals_in || 0);\n\n  row.net_r2b =\n    ((row.new_r2b_orders || 0) + (row.used_r2b_orders || 0)) -\n    (row.r2b_returns || 0);\n}\n\nreturn Object.values(mergedByDate)\n  .sort((a, b) => a.Date.localeCompare(b.Date))\n  .map(json => ({ json }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -96
+      ],
+      "id": "bab1b941-51ec-4863-8371-1d5384323691",
+      "name": "Sales Data - LCM"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_FLEET = 'tfs';\n\nconst DEFAULT_ROW = {\n  Date: null,\n\n  new_r2b_orders: 0,\n  used_r2b_orders: 0,\n  rentals_out: 0,\n  in_service_rentals_out: 0,\n\n  website_reservations: 0,\n  website_sales: 0,\n\n  rentals_out_hyundai: 0,\n  rentals_out_kia: 0,\n  rentals_out_mercedes: 0,\n  rentals_out_mg: 0,\n  rentals_out_nissan: 0,\n  rentals_out_skoda: 0,\n  rentals_out_tesla: 0,\n  rentals_out_toyota: 0,\n  rentals_out_vw: 0,\n  rentals_out_polestar: 0,\n\n  rentals_out_hammersmith: 0,\n  new_r2b_hammersmith: 0,\n  used_r2b_hammersmith: 0,\n\n  rentals_out_redbridge: 0,\n  new_r2b_redbridge: 0,\n  used_r2b_redbridge: 0,\n\n  rentals_out_dulwich: 0,\n  new_r2b_dulwich: 0,\n  used_r2b_dulwich: 0,\n\n  rentals_out_hendon_colindale: 0,\n  new_r2b_hendon_colindale: 0,\n  used_r2b_hendon_colindale: 0,\n\n  rentals_out_cardiff: 0,\n  new_r2b_cardiff: 0,\n  used_r2b_cardiff: 0,\n\n  rentals_out_manchester: 0,\n  new_r2b_manchester: 0,\n  used_r2b_manchester: 0,\n\n  rentals_out_shah_manchester: 0,\n  new_r2b_shah_manchester: 0,\n  used_r2b_shah_manchester: 0,\n\n  rentals_out_birmingham: 0,\n  new_r2b_birmingham: 0,\n  used_r2b_birmingham: 0,\n\n  rentals_in: 0,\n  rentals_in_hammersmith: 0,\n  rentals_in_redbridge: 0,\n  rentals_in_dulwich: 0,\n  rentals_in_hendon_colindale: 0,\n\n  r2b_returns: 0,\n  r2b_returns_cardiff: 0,\n  r2b_returns_manchester: 0,\n  r2b_returns_shah_manchester: 0,\n  r2b_returns_birmingham: 0,\n\n  available_vehicles: 0,\n  available_vehicles_kings_mall: 0,\n  avg_days_off_road: 0,\n\n  net_rentals: 0,\n  net_r2b: 0\n};\n\nconst mergedByDate = {};\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (row._fleet !== TARGET_FLEET) continue;\n  if (!row.Date) continue;\n\n  if (!mergedByDate[row.Date]) {\n    mergedByDate[row.Date] = { ...DEFAULT_ROW, Date: row.Date };\n  }\n\n  for (const [key, value] of Object.entries(row)) {\n    if (key === '_fleet' || key === 'Date') continue;\n    mergedByDate[row.Date][key] = value;\n  }\n}\n\nfor (const row of Object.values(mergedByDate)) {\n  row.r2b_returns =\n    (row.r2b_returns_cardiff || 0) +\n    (row.r2b_returns_manchester || 0) +\n    (row.r2b_returns_shah_manchester || 0) +\n    (row.r2b_returns_birmingham || 0);\n\n  row.net_rentals = (row.rentals_out || 0) - (row.rentals_in || 0);\n\n  row.net_r2b =\n    ((row.new_r2b_orders || 0) + (row.used_r2b_orders || 0)) -\n    (row.r2b_returns || 0);\n}\n\nreturn Object.values(mergedByDate)\n  .sort((a, b) => a.Date.localeCompare(b.Date))\n  .map(json => ({ json }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        96
+      ],
+      "id": "2016a890-58b4-4f7d-a2a1-41482203ad8c",
+      "name": "Sales Data - TFS"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_FLEET = 'triple-point';\n\nconst DEFAULT_ROW = {\n  Date: null,\n\n  new_r2b_orders: 0,\n  used_r2b_orders: 0,\n  rentals_out: 0,\n  in_service_rentals_out: 0,\n\n  website_reservations: 0,\n  website_sales: 0,\n\n  rentals_out_hyundai: 0,\n  rentals_out_kia: 0,\n  rentals_out_mercedes: 0,\n  rentals_out_mg: 0,\n  rentals_out_nissan: 0,\n  rentals_out_skoda: 0,\n  rentals_out_tesla: 0,\n  rentals_out_toyota: 0,\n  rentals_out_vw: 0,\n  rentals_out_polestar: 0,\n\n  rentals_out_hammersmith: 0,\n  new_r2b_hammersmith: 0,\n  used_r2b_hammersmith: 0,\n\n  rentals_out_redbridge: 0,\n  new_r2b_redbridge: 0,\n  used_r2b_redbridge: 0,\n\n  rentals_out_dulwich: 0,\n  new_r2b_dulwich: 0,\n  used_r2b_dulwich: 0,\n\n  rentals_out_hendon_colindale: 0,\n  new_r2b_hendon_colindale: 0,\n  used_r2b_hendon_colindale: 0,\n\n  rentals_out_cardiff: 0,\n  new_r2b_cardiff: 0,\n  used_r2b_cardiff: 0,\n\n  rentals_out_manchester: 0,\n  new_r2b_manchester: 0,\n  used_r2b_manchester: 0,\n\n  rentals_out_shah_manchester: 0,\n  new_r2b_shah_manchester: 0,\n  used_r2b_shah_manchester: 0,\n\n  rentals_out_birmingham: 0,\n  new_r2b_birmingham: 0,\n  used_r2b_birmingham: 0,\n\n  rentals_in: 0,\n  rentals_in_hammersmith: 0,\n  rentals_in_redbridge: 0,\n  rentals_in_dulwich: 0,\n  rentals_in_hendon_colindale: 0,\n\n  r2b_returns: 0,\n  r2b_returns_cardiff: 0,\n  r2b_returns_manchester: 0,\n  r2b_returns_shah_manchester: 0,\n  r2b_returns_birmingham: 0,\n\n  available_vehicles: 0,\n  available_vehicles_kings_mall: 0,\n  avg_days_off_road: 0,\n\n  net_rentals: 0,\n  net_r2b: 0\n};\n\nconst mergedByDate = {};\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (row._fleet !== TARGET_FLEET) continue;\n  if (!row.Date) continue;\n\n  if (!mergedByDate[row.Date]) {\n    mergedByDate[row.Date] = { ...DEFAULT_ROW, Date: row.Date };\n  }\n\n  for (const [key, value] of Object.entries(row)) {\n    if (key === '_fleet' || key === 'Date') continue;\n    mergedByDate[row.Date][key] = value;\n  }\n}\n\nfor (const row of Object.values(mergedByDate)) {\n  row.r2b_returns =\n    (row.r2b_returns_cardiff || 0) +\n    (row.r2b_returns_manchester || 0) +\n    (row.r2b_returns_shah_manchester || 0) +\n    (row.r2b_returns_birmingham || 0);\n\n  row.net_rentals = (row.rentals_out || 0) - (row.rentals_in || 0);\n\n  row.net_r2b =\n    ((row.new_r2b_orders || 0) + (row.used_r2b_orders || 0)) -\n    (row.r2b_returns || 0);\n}\n\nreturn Object.values(mergedByDate)\n  .sort((a, b) => a.Date.localeCompare(b.Date))\n  .map(json => ({ json }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        288
+      ],
+      "id": "c0409e4f-8de8-4004-89e6-a5784393844b",
+      "name": "Sales Data - TRIPLE-POINT"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34",
+          "mode": "list",
+          "cachedResultName": "WTM - Sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1816222245,
+          "mode": "list",
+          "cachedResultName": "Sales - Otto",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit#gid=1816222245"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Date": "={{ $json.Date }}",
+            "new_r2b_orders": "={{ $json.new_r2b_orders }}",
+            "used_r2b_orders": "={{ $json.used_r2b_orders }}",
+            "rentals_out": "={{ $json.rentals_out }}",
+            "rentals_in": "={{ $json.rentals_in }}",
+            "net_rentals": "={{ $json.net_rentals }}",
+            "net_r2b": "={{ $json.net_r2b }}",
+            "in_service_rentals_out": "={{ $json.in_service_rentals_out }}",
+            "rentals_out_hyundai": "={{ $json.rentals_out_hyundai }}",
+            "rentals_out_kia": "={{ $json.rentals_out_kia }}",
+            "rentals_out_mercedes": "={{ $json.rentals_out_mercedes }}",
+            "rentals_out_mg": "={{ $json.rentals_out_mg }}",
+            "rentals_out_nissan": "={{ $json.rentals_out_nissan }}",
+            "rentals_out_skoda": "={{ $json.rentals_out_skoda }}",
+            "rentals_out_tesla": "={{ $json.rentals_out_tesla }}",
+            "rentals_out_toyota": "={{ $json.rentals_out_toyota }}",
+            "rentals_out_vw": "={{ $json.rentals_out_vw }}",
+            "rentals_out_polestar": "={{ $json.rentals_out_polestar }}",
+            "rentals_out_hammersmith": "={{ $json.rentals_out_hammersmith }}",
+            "new_r2b_hammersmith": "={{ $json.new_r2b_hammersmith }}",
+            "rentals_in_hammersmith": "={{ $json.rentals_in_hammersmith }}",
+            "used_r2b_hammersmith": "={{ $json.used_r2b_hammersmith }}",
+            "rentals_out_redbridge": "={{ $json.rentals_out_redbridge }}",
+            "new_r2b_redbridge": "={{ $json.new_r2b_redbridge }}",
+            "used_r2b_redbridge": "={{ $json.used_r2b_redbridge }}",
+            "rentals_in_redbridge": "={{ $json.rentals_in_redbridge }}",
+            "rentals_out_dulwich": "={{ $json.rentals_out_dulwich }}",
+            "new_r2b_dulwich": "={{ $json.new_r2b_dulwich }}",
+            "used_r2b_dulwich": "={{ $json.used_r2b_dulwich }}",
+            "rentals_in_dulwich": "={{ $json.rentals_in_dulwich }}",
+            "rentals_out_hendon_colindale": "={{ $json.rentals_out_hendon_colindale }}",
+            "new_r2b_hendon_colindale": "={{ $json.new_r2b_hendon_colindale }}",
+            "used_r2b_hendon_colindale": "={{ $json.used_r2b_hendon_colindale }}",
+            "rentals_in_hendon_colindale": "={{ $json.rentals_in_hendon_colindale }}",
+            "new_r2b_cardiff": "={{ $json.new_r2b_cardiff }}",
+            "used_r2b_cardiff": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_cardiff": "={{ $json.r2b_returns_cardiff }}",
+            "new_r2b_manchester": "={{ $json.new_r2b_manchester }}",
+            "used_r2b_manchester": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_manchester": "={{ $json.r2b_returns_manchester }}",
+            "new_r2b_birmingham": "={{ $json.new_r2b_birmingham }}",
+            "used_r2b_birmingham": "={{ $json.used_r2b_birmingham }}",
+            "r2b_returns_birmingham": "={{ $json.r2b_returns_birmingham }}",
+            "avg_days_off_road": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_orders",
+              "displayName": "new_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_orders",
+              "displayName": "used_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out",
+              "displayName": "rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in",
+              "displayName": "rentals_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_rentals",
+              "displayName": "net_rentals",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_r2b",
+              "displayName": "net_r2b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "in_service_rentals_out",
+              "displayName": "in_service_rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "available_vehicles",
+              "displayName": "available_vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "available_vehicles_kings_mall",
+              "displayName": "available_vehicles_kings_mall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hyundai",
+              "displayName": "rentals_out_hyundai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_kia",
+              "displayName": "rentals_out_kia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mercedes",
+              "displayName": "rentals_out_mercedes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mg",
+              "displayName": "rentals_out_mg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_nissan",
+              "displayName": "rentals_out_nissan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_skoda",
+              "displayName": "rentals_out_skoda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_tesla",
+              "displayName": "rentals_out_tesla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_toyota",
+              "displayName": "rentals_out_toyota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_vw",
+              "displayName": "rentals_out_vw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_polestar",
+              "displayName": "rentals_out_polestar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hammersmith",
+              "displayName": "rentals_out_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hammersmith",
+              "displayName": "new_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hammersmith",
+              "displayName": "used_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hammersmith",
+              "displayName": "rentals_in_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_redbridge",
+              "displayName": "rentals_out_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_redbridge",
+              "displayName": "new_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_redbridge",
+              "displayName": "used_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_redbridge",
+              "displayName": "rentals_in_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_dulwich",
+              "displayName": "rentals_out_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_dulwich",
+              "displayName": "new_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_dulwich",
+              "displayName": "used_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_dulwich",
+              "displayName": "rentals_in_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hendon_colindale",
+              "displayName": "rentals_out_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hendon_colindale",
+              "displayName": "new_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hendon_colindale",
+              "displayName": "used_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hendon_colindale",
+              "displayName": "rentals_in_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_cardiff",
+              "displayName": "new_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_cardiff",
+              "displayName": "used_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_cardiff",
+              "displayName": "r2b_returns_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_manchester",
+              "displayName": "new_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_manchester",
+              "displayName": "used_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_manchester",
+              "displayName": "r2b_returns_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_birmingham",
+              "displayName": "new_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_birmingham",
+              "displayName": "used_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_birmingham",
+              "displayName": "r2b_returns_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        -480
+      ],
+      "id": "2f043a65-036c-422b-8490-0545141842d0",
+      "name": "Append Row in Sales - Otto",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DDm1EnLwSliDA7YO",
+          "name": "Holly Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34",
+          "mode": "list",
+          "cachedResultName": "WTM - Sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1199577985,
+          "mode": "list",
+          "cachedResultName": "Sales - Weflex",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit#gid=1199577985"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Date": "={{ $json.Date }}",
+            "new_r2b_orders": "={{ $json.new_r2b_orders }}",
+            "used_r2b_orders": "={{ $json.used_r2b_orders }}",
+            "rentals_out": "={{ $json.rentals_out }}",
+            "rentals_in": "={{ $json.rentals_in }}",
+            "net_rentals": "={{ $json.net_rentals }}",
+            "net_r2b": "={{ $json.net_r2b }}",
+            "in_service_rentals_out": "={{ $json.in_service_rentals_out }}",
+            "rentals_out_hyundai": "={{ $json.rentals_out_hyundai }}",
+            "rentals_out_kia": "={{ $json.rentals_out_kia }}",
+            "rentals_out_mercedes": "={{ $json.rentals_out_mercedes }}",
+            "rentals_out_mg": "={{ $json.rentals_out_mg }}",
+            "rentals_out_nissan": "={{ $json.rentals_out_nissan }}",
+            "rentals_out_skoda": "={{ $json.rentals_out_skoda }}",
+            "rentals_out_tesla": "={{ $json.rentals_out_tesla }}",
+            "rentals_out_toyota": "={{ $json.rentals_out_toyota }}",
+            "rentals_out_vw": "={{ $json.rentals_out_vw }}",
+            "rentals_out_polestar": "={{ $json.rentals_out_polestar }}",
+            "rentals_out_hammersmith": "={{ $json.rentals_out_hammersmith }}",
+            "new_r2b_hammersmith": "={{ $json.new_r2b_hammersmith }}",
+            "rentals_in_hammersmith": "={{ $json.rentals_in_hammersmith }}",
+            "used_r2b_hammersmith": "={{ $json.used_r2b_hammersmith }}",
+            "rentals_out_redbridge": "={{ $json.rentals_out_redbridge }}",
+            "new_r2b_redbridge": "={{ $json.new_r2b_redbridge }}",
+            "used_r2b_redbridge": "={{ $json.used_r2b_redbridge }}",
+            "rentals_in_redbridge": "={{ $json.rentals_in_redbridge }}",
+            "rentals_out_dulwich": "={{ $json.rentals_out_dulwich }}",
+            "new_r2b_dulwich": "={{ $json.new_r2b_dulwich }}",
+            "used_r2b_dulwich": "={{ $json.used_r2b_dulwich }}",
+            "rentals_in_dulwich": "={{ $json.rentals_in_dulwich }}",
+            "rentals_out_hendon_colindale": "={{ $json.rentals_out_hendon_colindale }}",
+            "new_r2b_hendon_colindale": "={{ $json.new_r2b_hendon_colindale }}",
+            "used_r2b_hendon_colindale": "={{ $json.used_r2b_hendon_colindale }}",
+            "rentals_in_hendon_colindale": "={{ $json.rentals_in_hendon_colindale }}",
+            "new_r2b_cardiff": "={{ $json.new_r2b_cardiff }}",
+            "used_r2b_cardiff": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_cardiff": "={{ $json.r2b_returns_cardiff }}",
+            "new_r2b_manchester": "={{ $json.new_r2b_manchester }}",
+            "used_r2b_manchester": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_manchester": "={{ $json.r2b_returns_manchester }}",
+            "new_r2b_birmingham": "={{ $json.new_r2b_birmingham }}",
+            "used_r2b_birmingham": "={{ $json.used_r2b_birmingham }}",
+            "r2b_returns_birmingham": "={{ $json.r2b_returns_birmingham }}",
+            "avg_days_off_road": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_orders",
+              "displayName": "new_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_orders",
+              "displayName": "used_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out",
+              "displayName": "rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in",
+              "displayName": "rentals_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_rentals",
+              "displayName": "net_rentals",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_r2b",
+              "displayName": "net_r2b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "in_service_rentals_out",
+              "displayName": "in_service_rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "available_vehicles",
+              "displayName": "available_vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "available_vehicles_kings_mall",
+              "displayName": "available_vehicles_kings_mall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hyundai",
+              "displayName": "rentals_out_hyundai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_kia",
+              "displayName": "rentals_out_kia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mercedes",
+              "displayName": "rentals_out_mercedes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mg",
+              "displayName": "rentals_out_mg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_nissan",
+              "displayName": "rentals_out_nissan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_skoda",
+              "displayName": "rentals_out_skoda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_tesla",
+              "displayName": "rentals_out_tesla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_toyota",
+              "displayName": "rentals_out_toyota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_vw",
+              "displayName": "rentals_out_vw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_polestar",
+              "displayName": "rentals_out_polestar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hammersmith",
+              "displayName": "rentals_out_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hammersmith",
+              "displayName": "new_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hammersmith",
+              "displayName": "used_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hammersmith",
+              "displayName": "rentals_in_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_redbridge",
+              "displayName": "rentals_out_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_redbridge",
+              "displayName": "new_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_redbridge",
+              "displayName": "used_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_redbridge",
+              "displayName": "rentals_in_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_dulwich",
+              "displayName": "rentals_out_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_dulwich",
+              "displayName": "new_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_dulwich",
+              "displayName": "used_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_dulwich",
+              "displayName": "rentals_in_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hendon_colindale",
+              "displayName": "rentals_out_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hendon_colindale",
+              "displayName": "new_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hendon_colindale",
+              "displayName": "used_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hendon_colindale",
+              "displayName": "rentals_in_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_cardiff",
+              "displayName": "new_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_cardiff",
+              "displayName": "used_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_cardiff",
+              "displayName": "r2b_returns_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_manchester",
+              "displayName": "new_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_manchester",
+              "displayName": "used_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_manchester",
+              "displayName": "r2b_returns_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_birmingham",
+              "displayName": "new_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_birmingham",
+              "displayName": "used_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_birmingham",
+              "displayName": "r2b_returns_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        -288
+      ],
+      "id": "7bf8ef13-1ed6-4465-928a-17a4088ae0de",
+      "name": "Append Row in Sales - Weflex",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DDm1EnLwSliDA7YO",
+          "name": "Holly Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34",
+          "mode": "list",
+          "cachedResultName": "WTM - Sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1004578773,
+          "mode": "list",
+          "cachedResultName": "Sales - LCM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit#gid=1004578773"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Date": "={{ $json.Date }}",
+            "new_r2b_orders": "={{ $json.new_r2b_orders }}",
+            "used_r2b_orders": "={{ $json.used_r2b_orders }}",
+            "rentals_out": "={{ $json.rentals_out }}",
+            "rentals_in": "={{ $json.rentals_in }}",
+            "net_rentals": "={{ $json.net_rentals }}",
+            "net_r2b": "={{ $json.net_r2b }}",
+            "in_service_rentals_out": "={{ $json.in_service_rentals_out }}",
+            "rentals_out_hyundai": "={{ $json.rentals_out_hyundai }}",
+            "rentals_out_kia": "={{ $json.rentals_out_kia }}",
+            "rentals_out_mercedes": "={{ $json.rentals_out_mercedes }}",
+            "rentals_out_mg": "={{ $json.rentals_out_mg }}",
+            "rentals_out_nissan": "={{ $json.rentals_out_nissan }}",
+            "rentals_out_skoda": "={{ $json.rentals_out_skoda }}",
+            "rentals_out_tesla": "={{ $json.rentals_out_tesla }}",
+            "rentals_out_toyota": "={{ $json.rentals_out_toyota }}",
+            "rentals_out_vw": "={{ $json.rentals_out_vw }}",
+            "rentals_out_polestar": "={{ $json.rentals_out_polestar }}",
+            "rentals_out_hammersmith": "={{ $json.rentals_out_hammersmith }}",
+            "new_r2b_hammersmith": "={{ $json.new_r2b_hammersmith }}",
+            "rentals_in_hammersmith": "={{ $json.rentals_in_hammersmith }}",
+            "used_r2b_hammersmith": "={{ $json.used_r2b_hammersmith }}",
+            "rentals_out_redbridge": "={{ $json.rentals_out_redbridge }}",
+            "new_r2b_redbridge": "={{ $json.new_r2b_redbridge }}",
+            "used_r2b_redbridge": "={{ $json.used_r2b_redbridge }}",
+            "rentals_in_redbridge": "={{ $json.rentals_in_redbridge }}",
+            "rentals_out_dulwich": "={{ $json.rentals_out_dulwich }}",
+            "new_r2b_dulwich": "={{ $json.new_r2b_dulwich }}",
+            "used_r2b_dulwich": "={{ $json.used_r2b_dulwich }}",
+            "rentals_in_dulwich": "={{ $json.rentals_in_dulwich }}",
+            "rentals_out_hendon_colindale": "={{ $json.rentals_out_hendon_colindale }}",
+            "new_r2b_hendon_colindale": "={{ $json.new_r2b_hendon_colindale }}",
+            "used_r2b_hendon_colindale": "={{ $json.used_r2b_hendon_colindale }}",
+            "rentals_in_hendon_colindale": "={{ $json.rentals_in_hendon_colindale }}",
+            "new_r2b_cardiff": "={{ $json.new_r2b_cardiff }}",
+            "used_r2b_cardiff": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_cardiff": "={{ $json.r2b_returns_cardiff }}",
+            "new_r2b_manchester": "={{ $json.new_r2b_manchester }}",
+            "used_r2b_manchester": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_manchester": "={{ $json.r2b_returns_manchester }}",
+            "new_r2b_birmingham": "={{ $json.new_r2b_birmingham }}",
+            "used_r2b_birmingham": "={{ $json.used_r2b_birmingham }}",
+            "r2b_returns_birmingham": "={{ $json.r2b_returns_birmingham }}",
+            "avg_days_off_road": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_orders",
+              "displayName": "new_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_orders",
+              "displayName": "used_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out",
+              "displayName": "rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in",
+              "displayName": "rentals_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_rentals",
+              "displayName": "net_rentals",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_r2b",
+              "displayName": "net_r2b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "in_service_rentals_out",
+              "displayName": "in_service_rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "available_vehicles",
+              "displayName": "available_vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "available_vehicles_kings_mall",
+              "displayName": "available_vehicles_kings_mall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hyundai",
+              "displayName": "rentals_out_hyundai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_kia",
+              "displayName": "rentals_out_kia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mercedes",
+              "displayName": "rentals_out_mercedes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mg",
+              "displayName": "rentals_out_mg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_nissan",
+              "displayName": "rentals_out_nissan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_skoda",
+              "displayName": "rentals_out_skoda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_tesla",
+              "displayName": "rentals_out_tesla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_toyota",
+              "displayName": "rentals_out_toyota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_vw",
+              "displayName": "rentals_out_vw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_polestar",
+              "displayName": "rentals_out_polestar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hammersmith",
+              "displayName": "rentals_out_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hammersmith",
+              "displayName": "new_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hammersmith",
+              "displayName": "used_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hammersmith",
+              "displayName": "rentals_in_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_redbridge",
+              "displayName": "rentals_out_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_redbridge",
+              "displayName": "new_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_redbridge",
+              "displayName": "used_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_redbridge",
+              "displayName": "rentals_in_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_dulwich",
+              "displayName": "rentals_out_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_dulwich",
+              "displayName": "new_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_dulwich",
+              "displayName": "used_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_dulwich",
+              "displayName": "rentals_in_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hendon_colindale",
+              "displayName": "rentals_out_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hendon_colindale",
+              "displayName": "new_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hendon_colindale",
+              "displayName": "used_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hendon_colindale",
+              "displayName": "rentals_in_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_cardiff",
+              "displayName": "new_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_cardiff",
+              "displayName": "used_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_cardiff",
+              "displayName": "r2b_returns_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_manchester",
+              "displayName": "new_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_manchester",
+              "displayName": "used_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_manchester",
+              "displayName": "r2b_returns_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_birmingham",
+              "displayName": "new_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_birmingham",
+              "displayName": "used_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_birmingham",
+              "displayName": "r2b_returns_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        -96
+      ],
+      "id": "035d9a05-e0ff-4661-adb4-a0fb99fa2c34",
+      "name": "Append Row in Sales - LCM",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DDm1EnLwSliDA7YO",
+          "name": "Holly Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34",
+          "mode": "list",
+          "cachedResultName": "WTM - Sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1884832458,
+          "mode": "list",
+          "cachedResultName": "Sales - TFS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit#gid=1884832458"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Date": "={{ $json.Date }}",
+            "new_r2b_orders": "={{ $json.new_r2b_orders }}",
+            "used_r2b_orders": "={{ $json.used_r2b_orders }}",
+            "rentals_out": "={{ $json.rentals_out }}",
+            "rentals_in": "={{ $json.rentals_in }}",
+            "net_rentals": "={{ $json.net_rentals }}",
+            "net_r2b": "={{ $json.net_r2b }}",
+            "in_service_rentals_out": "={{ $json.in_service_rentals_out }}",
+            "rentals_out_hyundai": "={{ $json.rentals_out_hyundai }}",
+            "rentals_out_kia": "={{ $json.rentals_out_kia }}",
+            "rentals_out_mercedes": "={{ $json.rentals_out_mercedes }}",
+            "rentals_out_mg": "={{ $json.rentals_out_mg }}",
+            "rentals_out_nissan": "={{ $json.rentals_out_nissan }}",
+            "rentals_out_skoda": "={{ $json.rentals_out_skoda }}",
+            "rentals_out_tesla": "={{ $json.rentals_out_tesla }}",
+            "rentals_out_toyota": "={{ $json.rentals_out_toyota }}",
+            "rentals_out_vw": "={{ $json.rentals_out_vw }}",
+            "rentals_out_polestar": "={{ $json.rentals_out_polestar }}",
+            "rentals_out_hammersmith": "={{ $json.rentals_out_hammersmith }}",
+            "new_r2b_hammersmith": "={{ $json.new_r2b_hammersmith }}",
+            "rentals_in_hammersmith": "={{ $json.rentals_in_hammersmith }}",
+            "used_r2b_hammersmith": "={{ $json.used_r2b_hammersmith }}",
+            "rentals_out_redbridge": "={{ $json.rentals_out_redbridge }}",
+            "new_r2b_redbridge": "={{ $json.new_r2b_redbridge }}",
+            "used_r2b_redbridge": "={{ $json.used_r2b_redbridge }}",
+            "rentals_in_redbridge": "={{ $json.rentals_in_redbridge }}",
+            "rentals_out_dulwich": "={{ $json.rentals_out_dulwich }}",
+            "new_r2b_dulwich": "={{ $json.new_r2b_dulwich }}",
+            "used_r2b_dulwich": "={{ $json.used_r2b_dulwich }}",
+            "rentals_in_dulwich": "={{ $json.rentals_in_dulwich }}",
+            "rentals_out_hendon_colindale": "={{ $json.rentals_out_hendon_colindale }}",
+            "new_r2b_hendon_colindale": "={{ $json.new_r2b_hendon_colindale }}",
+            "used_r2b_hendon_colindale": "={{ $json.used_r2b_hendon_colindale }}",
+            "rentals_in_hendon_colindale": "={{ $json.rentals_in_hendon_colindale }}",
+            "new_r2b_cardiff": "={{ $json.new_r2b_cardiff }}",
+            "used_r2b_cardiff": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_cardiff": "={{ $json.r2b_returns_cardiff }}",
+            "new_r2b_manchester": "={{ $json.new_r2b_manchester }}",
+            "used_r2b_manchester": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_manchester": "={{ $json.r2b_returns_manchester }}",
+            "new_r2b_birmingham": "={{ $json.new_r2b_birmingham }}",
+            "used_r2b_birmingham": "={{ $json.used_r2b_birmingham }}",
+            "r2b_returns_birmingham": "={{ $json.r2b_returns_birmingham }}",
+            "avg_days_off_road": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_orders",
+              "displayName": "new_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_orders",
+              "displayName": "used_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out",
+              "displayName": "rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in",
+              "displayName": "rentals_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_rentals",
+              "displayName": "net_rentals",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_r2b",
+              "displayName": "net_r2b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "in_service_rentals_out",
+              "displayName": "in_service_rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "available_vehicles",
+              "displayName": "available_vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "available_vehicles_kings_mall",
+              "displayName": "available_vehicles_kings_mall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hyundai",
+              "displayName": "rentals_out_hyundai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_kia",
+              "displayName": "rentals_out_kia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mercedes",
+              "displayName": "rentals_out_mercedes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mg",
+              "displayName": "rentals_out_mg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_nissan",
+              "displayName": "rentals_out_nissan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_skoda",
+              "displayName": "rentals_out_skoda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_tesla",
+              "displayName": "rentals_out_tesla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_toyota",
+              "displayName": "rentals_out_toyota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_vw",
+              "displayName": "rentals_out_vw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_polestar",
+              "displayName": "rentals_out_polestar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hammersmith",
+              "displayName": "rentals_out_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hammersmith",
+              "displayName": "new_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hammersmith",
+              "displayName": "used_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hammersmith",
+              "displayName": "rentals_in_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_redbridge",
+              "displayName": "rentals_out_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_redbridge",
+              "displayName": "new_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_redbridge",
+              "displayName": "used_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_redbridge",
+              "displayName": "rentals_in_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_dulwich",
+              "displayName": "rentals_out_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_dulwich",
+              "displayName": "new_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_dulwich",
+              "displayName": "used_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_dulwich",
+              "displayName": "rentals_in_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hendon_colindale",
+              "displayName": "rentals_out_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hendon_colindale",
+              "displayName": "new_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hendon_colindale",
+              "displayName": "used_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hendon_colindale",
+              "displayName": "rentals_in_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_cardiff",
+              "displayName": "new_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_cardiff",
+              "displayName": "used_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_cardiff",
+              "displayName": "r2b_returns_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_manchester",
+              "displayName": "new_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_manchester",
+              "displayName": "used_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_manchester",
+              "displayName": "r2b_returns_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_birmingham",
+              "displayName": "new_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_birmingham",
+              "displayName": "used_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_birmingham",
+              "displayName": "r2b_returns_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        96
+      ],
+      "id": "faba85bc-6637-44d6-95f3-4ceb308c1621",
+      "name": "Append Row in Sales - TFS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DDm1EnLwSliDA7YO",
+          "name": "Holly Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34",
+          "mode": "list",
+          "cachedResultName": "WTM - Sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 449194447,
+          "mode": "list",
+          "cachedResultName": "Sales - TP",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit#gid=449194447"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Date": "={{ $json.Date }}",
+            "new_r2b_orders": "={{ $json.new_r2b_orders }}",
+            "used_r2b_orders": "={{ $json.used_r2b_orders }}",
+            "rentals_out": "={{ $json.rentals_out }}",
+            "rentals_in": "={{ $json.rentals_in }}",
+            "net_rentals": "={{ $json.net_rentals }}",
+            "net_r2b": "={{ $json.net_r2b }}",
+            "in_service_rentals_out": "={{ $json.in_service_rentals_out }}",
+            "rentals_out_hyundai": "={{ $json.rentals_out_hyundai }}",
+            "rentals_out_kia": "={{ $json.rentals_out_kia }}",
+            "rentals_out_mercedes": "={{ $json.rentals_out_mercedes }}",
+            "rentals_out_mg": "={{ $json.rentals_out_mg }}",
+            "rentals_out_nissan": "={{ $json.rentals_out_nissan }}",
+            "rentals_out_skoda": "={{ $json.rentals_out_skoda }}",
+            "rentals_out_tesla": "={{ $json.rentals_out_tesla }}",
+            "rentals_out_toyota": "={{ $json.rentals_out_toyota }}",
+            "rentals_out_vw": "={{ $json.rentals_out_vw }}",
+            "rentals_out_polestar": "={{ $json.rentals_out_polestar }}",
+            "rentals_out_hammersmith": "={{ $json.rentals_out_hammersmith }}",
+            "new_r2b_hammersmith": "={{ $json.new_r2b_hammersmith }}",
+            "rentals_in_hammersmith": "={{ $json.rentals_in_hammersmith }}",
+            "used_r2b_hammersmith": "={{ $json.used_r2b_hammersmith }}",
+            "rentals_out_redbridge": "={{ $json.rentals_out_redbridge }}",
+            "new_r2b_redbridge": "={{ $json.new_r2b_redbridge }}",
+            "used_r2b_redbridge": "={{ $json.used_r2b_redbridge }}",
+            "rentals_in_redbridge": "={{ $json.rentals_in_redbridge }}",
+            "rentals_out_dulwich": "={{ $json.rentals_out_dulwich }}",
+            "new_r2b_dulwich": "={{ $json.new_r2b_dulwich }}",
+            "used_r2b_dulwich": "={{ $json.used_r2b_dulwich }}",
+            "rentals_in_dulwich": "={{ $json.rentals_in_dulwich }}",
+            "rentals_out_hendon_colindale": "={{ $json.rentals_out_hendon_colindale }}",
+            "new_r2b_hendon_colindale": "={{ $json.new_r2b_hendon_colindale }}",
+            "used_r2b_hendon_colindale": "={{ $json.used_r2b_hendon_colindale }}",
+            "rentals_in_hendon_colindale": "={{ $json.rentals_in_hendon_colindale }}",
+            "new_r2b_cardiff": "={{ $json.new_r2b_cardiff }}",
+            "used_r2b_cardiff": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_cardiff": "={{ $json.r2b_returns_cardiff }}",
+            "new_r2b_manchester": "={{ $json.new_r2b_manchester }}",
+            "used_r2b_manchester": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_manchester": "={{ $json.r2b_returns_manchester }}",
+            "new_r2b_birmingham": "={{ $json.new_r2b_birmingham }}",
+            "used_r2b_birmingham": "={{ $json.used_r2b_birmingham }}",
+            "r2b_returns_birmingham": "={{ $json.r2b_returns_birmingham }}",
+            "avg_days_off_road": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_orders",
+              "displayName": "new_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_orders",
+              "displayName": "used_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out",
+              "displayName": "rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in",
+              "displayName": "rentals_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_rentals",
+              "displayName": "net_rentals",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_r2b",
+              "displayName": "net_r2b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "in_service_rentals_out",
+              "displayName": "in_service_rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "available_vehicles",
+              "displayName": "available_vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "available_vehicles_kings_mall",
+              "displayName": "available_vehicles_kings_mall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hyundai",
+              "displayName": "rentals_out_hyundai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_kia",
+              "displayName": "rentals_out_kia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mercedes",
+              "displayName": "rentals_out_mercedes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mg",
+              "displayName": "rentals_out_mg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_nissan",
+              "displayName": "rentals_out_nissan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_skoda",
+              "displayName": "rentals_out_skoda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_tesla",
+              "displayName": "rentals_out_tesla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_toyota",
+              "displayName": "rentals_out_toyota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_vw",
+              "displayName": "rentals_out_vw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_polestar",
+              "displayName": "rentals_out_polestar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hammersmith",
+              "displayName": "rentals_out_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hammersmith",
+              "displayName": "new_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hammersmith",
+              "displayName": "used_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hammersmith",
+              "displayName": "rentals_in_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_redbridge",
+              "displayName": "rentals_out_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_redbridge",
+              "displayName": "new_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_redbridge",
+              "displayName": "used_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_redbridge",
+              "displayName": "rentals_in_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_dulwich",
+              "displayName": "rentals_out_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_dulwich",
+              "displayName": "new_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_dulwich",
+              "displayName": "used_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_dulwich",
+              "displayName": "rentals_in_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hendon_colindale",
+              "displayName": "rentals_out_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hendon_colindale",
+              "displayName": "new_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hendon_colindale",
+              "displayName": "used_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hendon_colindale",
+              "displayName": "rentals_in_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_cardiff",
+              "displayName": "new_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_cardiff",
+              "displayName": "used_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_cardiff",
+              "displayName": "r2b_returns_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_manchester",
+              "displayName": "new_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_manchester",
+              "displayName": "used_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_manchester",
+              "displayName": "r2b_returns_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_birmingham",
+              "displayName": "new_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_birmingham",
+              "displayName": "used_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_birmingham",
+              "displayName": "r2b_returns_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        288
+      ],
+      "id": "7d78bd01-4153-4346-a075-c9b01637638d",
+      "name": "Append Row in Sales - TP",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DDm1EnLwSliDA7YO",
+          "name": "Holly Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                2
+              ],
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1360,
+        -224
+      ],
+      "id": "a2749e0a-ffea-45b1-8130-c99033bb2896",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_FLEET = 'all';\n\nconst DEFAULT_ROW = {\n  Date: null,\n\n  new_r2b_orders: 0,\n  used_r2b_orders: 0,\n  rentals_out: 0,\n  in_service_rentals_out: 0,\n\n  website_reservations: 0,\n  website_sales: 0,\n\n  rentals_out_hyundai: 0,\n  rentals_out_kia: 0,\n  rentals_out_mercedes: 0,\n  rentals_out_mg: 0,\n  rentals_out_nissan: 0,\n  rentals_out_skoda: 0,\n  rentals_out_tesla: 0,\n  rentals_out_toyota: 0,\n  rentals_out_vw: 0,\n  rentals_out_polestar: 0,\n\n  rentals_out_hammersmith: 0,\n  new_r2b_hammersmith: 0,\n  used_r2b_hammersmith: 0,\n\n  rentals_out_redbridge: 0,\n  new_r2b_redbridge: 0,\n  used_r2b_redbridge: 0,\n\n  rentals_out_dulwich: 0,\n  new_r2b_dulwich: 0,\n  used_r2b_dulwich: 0,\n\n  rentals_out_hendon_colindale: 0,\n  new_r2b_hendon_colindale: 0,\n  used_r2b_hendon_colindale: 0,\n\n  rentals_out_cardiff: 0,\n  new_r2b_cardiff: 0,\n  used_r2b_cardiff: 0,\n\n  rentals_out_manchester: 0,\n  new_r2b_manchester: 0,\n  used_r2b_manchester: 0,\n\n  rentals_out_shah_manchester: 0,\n  new_r2b_shah_manchester: 0,\n  used_r2b_shah_manchester: 0,\n\n  rentals_out_birmingham: 0,\n  new_r2b_birmingham: 0,\n  used_r2b_birmingham: 0,\n\n  rentals_in: 0,\n  rentals_in_hammersmith: 0,\n  rentals_in_redbridge: 0,\n  rentals_in_dulwich: 0,\n  rentals_in_hendon_colindale: 0,\n\n  r2b_returns: 0,\n  r2b_returns_cardiff: 0,\n  r2b_returns_manchester: 0,\n  r2b_returns_shah_manchester: 0,\n  r2b_returns_birmingham: 0,\n\n  available_vehicles: 0,\n  available_vehicles_kings_mall: 0,\n  avg_days_off_road: 0,\n\n  net_rentals: 0,\n  net_r2b: 0\n};\n\nconst mergedByDate = {};\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (row._fleet !== TARGET_FLEET) continue;\n  if (!row.Date) continue;\n\n  if (!mergedByDate[row.Date]) {\n    mergedByDate[row.Date] = { ...DEFAULT_ROW, Date: row.Date };\n  }\n\n  for (const [key, value] of Object.entries(row)) {\n    if (key === '_fleet' || key === 'Date') continue;\n    mergedByDate[row.Date][key] = value;\n  }\n}\n\nfor (const row of Object.values(mergedByDate)) {\n  row.r2b_returns =\n    (row.r2b_returns_cardiff || 0) +\n    (row.r2b_returns_manchester || 0) +\n    (row.r2b_returns_shah_manchester || 0) +\n    (row.r2b_returns_birmingham || 0);\n\n  row.net_rentals = (row.rentals_out || 0) - (row.rentals_in || 0);\n\n  row.net_r2b =\n    ((row.new_r2b_orders || 0) + (row.used_r2b_orders || 0)) -\n    (row.r2b_returns || 0);\n}\n\nreturn Object.values(mergedByDate)\n  .sort((a, b) => a.Date.localeCompare(b.Date))\n  .map(json => ({ json }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -672
+      ],
+      "id": "25b2f169-e83b-4bb6-baa4-68a43d648ef6",
+      "name": "Sales Data - all"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34",
+          "mode": "list",
+          "cachedResultName": "WTM - Sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sales - All",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MQCi462e_XvXXAMCkujsWXrxn0gg2Nh0cLSE48qXo34/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Date": "={{ $json.Date }}",
+            "new_r2b_orders": "={{ $json.new_r2b_orders }}",
+            "used_r2b_orders": "={{ $json.used_r2b_orders }}",
+            "rentals_out": "={{ $json.rentals_out }}",
+            "rentals_in": "={{ $json.rentals_in }}",
+            "net_rentals": "={{ $json.net_rentals }}",
+            "net_r2b": "={{ $json.net_r2b }}",
+            "in_service_rentals_out": "={{ $json.in_service_rentals_out }}",
+            "rentals_out_hyundai": "={{ $json.rentals_out_hyundai }}",
+            "rentals_out_kia": "={{ $json.rentals_out_kia }}",
+            "rentals_out_mercedes": "={{ $json.rentals_out_mercedes }}",
+            "rentals_out_mg": "={{ $json.rentals_out_mg }}",
+            "rentals_out_nissan": "={{ $json.rentals_out_nissan }}",
+            "rentals_out_skoda": "={{ $json.rentals_out_skoda }}",
+            "rentals_out_tesla": "={{ $json.rentals_out_tesla }}",
+            "rentals_out_toyota": "={{ $json.rentals_out_toyota }}",
+            "rentals_out_vw": "={{ $json.rentals_out_vw }}",
+            "rentals_out_polestar": "={{ $json.rentals_out_polestar }}",
+            "rentals_out_hammersmith": "={{ $json.rentals_out_hammersmith }}",
+            "new_r2b_hammersmith": "={{ $json.new_r2b_hammersmith }}",
+            "rentals_in_hammersmith": "={{ $json.rentals_in_hammersmith }}",
+            "used_r2b_hammersmith": "={{ $json.used_r2b_hammersmith }}",
+            "rentals_out_redbridge": "={{ $json.rentals_out_redbridge }}",
+            "new_r2b_redbridge": "={{ $json.new_r2b_redbridge }}",
+            "used_r2b_redbridge": "={{ $json.used_r2b_redbridge }}",
+            "rentals_in_redbridge": "={{ $json.rentals_in_redbridge }}",
+            "rentals_out_dulwich": "={{ $json.rentals_out_dulwich }}",
+            "new_r2b_dulwich": "={{ $json.new_r2b_dulwich }}",
+            "used_r2b_dulwich": "={{ $json.used_r2b_dulwich }}",
+            "rentals_in_dulwich": "={{ $json.rentals_in_dulwich }}",
+            "rentals_out_hendon_colindale": "={{ $json.rentals_out_hendon_colindale }}",
+            "new_r2b_hendon_colindale": "={{ $json.new_r2b_hendon_colindale }}",
+            "used_r2b_hendon_colindale": "={{ $json.used_r2b_hendon_colindale }}",
+            "rentals_in_hendon_colindale": "={{ $json.rentals_in_hendon_colindale }}",
+            "new_r2b_cardiff": "={{ $json.new_r2b_cardiff }}",
+            "used_r2b_cardiff": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_cardiff": "={{ $json.r2b_returns_cardiff }}",
+            "new_r2b_manchester": "={{ $json.new_r2b_manchester }}",
+            "used_r2b_manchester": "={{ $json.used_r2b_cardiff }}",
+            "r2b_returns_manchester": "={{ $json.r2b_returns_manchester }}",
+            "new_r2b_birmingham": "={{ $json.new_r2b_birmingham }}",
+            "used_r2b_birmingham": "={{ $json.used_r2b_birmingham }}",
+            "r2b_returns_birmingham": "={{ $json.r2b_returns_birmingham }}",
+            "avg_days_off_road": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_orders",
+              "displayName": "new_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_orders",
+              "displayName": "used_r2b_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out",
+              "displayName": "rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in",
+              "displayName": "rentals_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_rentals",
+              "displayName": "net_rentals",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "net_r2b",
+              "displayName": "net_r2b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "in_service_rentals_out",
+              "displayName": "in_service_rentals_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website_sales",
+              "displayName": "website_sales",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "available_vehicles",
+              "displayName": "available_vehicles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "available_vehicles_kings_mall",
+              "displayName": "available_vehicles_kings_mall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "avg_days_off_road",
+              "displayName": "avg_days_off_road",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hyundai",
+              "displayName": "rentals_out_hyundai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_kia",
+              "displayName": "rentals_out_kia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mercedes",
+              "displayName": "rentals_out_mercedes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_mg",
+              "displayName": "rentals_out_mg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_nissan",
+              "displayName": "rentals_out_nissan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_skoda",
+              "displayName": "rentals_out_skoda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_tesla",
+              "displayName": "rentals_out_tesla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_toyota",
+              "displayName": "rentals_out_toyota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_vw",
+              "displayName": "rentals_out_vw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_polestar",
+              "displayName": "rentals_out_polestar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hammersmith",
+              "displayName": "rentals_out_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hammersmith",
+              "displayName": "new_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hammersmith",
+              "displayName": "used_r2b_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hammersmith",
+              "displayName": "rentals_in_hammersmith",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_redbridge",
+              "displayName": "rentals_out_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_redbridge",
+              "displayName": "new_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_redbridge",
+              "displayName": "used_r2b_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_redbridge",
+              "displayName": "rentals_in_redbridge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_dulwich",
+              "displayName": "rentals_out_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_dulwich",
+              "displayName": "new_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_dulwich",
+              "displayName": "used_r2b_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_dulwich",
+              "displayName": "rentals_in_dulwich",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_hendon_colindale",
+              "displayName": "rentals_out_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_hendon_colindale",
+              "displayName": "new_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_hendon_colindale",
+              "displayName": "used_r2b_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_in_hendon_colindale",
+              "displayName": "rentals_in_hendon_colindale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_cardiff",
+              "displayName": "new_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_cardiff",
+              "displayName": "used_r2b_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_cardiff",
+              "displayName": "r2b_returns_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_manchester",
+              "displayName": "new_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_manchester",
+              "displayName": "used_r2b_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_manchester",
+              "displayName": "r2b_returns_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "new_r2b_birmingham",
+              "displayName": "new_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used_r2b_birmingham",
+              "displayName": "used_r2b_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "r2b_returns_birmingham",
+              "displayName": "r2b_returns_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rentals_out_cardiff",
+              "displayName": "rentals_out_cardiff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "rentals_out_manchester",
+              "displayName": "rentals_out_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "rentals_out_shah_manchester",
+              "displayName": "rentals_out_shah_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "new_r2b_shah_manchester",
+              "displayName": "new_r2b_shah_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "used_r2b_shah_manchester",
+              "displayName": "used_r2b_shah_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "rentals_out_birmingham",
+              "displayName": "rentals_out_birmingham",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "r2b_returns",
+              "displayName": "r2b_returns",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "r2b_returns_shah_manchester",
+              "displayName": "r2b_returns_shah_manchester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "_fleet",
+              "displayName": "_fleet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        -672
+      ],
+      "id": "c7a43213-a79d-4f7e-9754-c61fb5997cb1",
+      "name": "Append Row in Sales - All",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DDm1EnLwSliDA7YO",
+          "name": "Holly Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH agreement_counts AS (\n    SELECT\n        vehicle_id,\n        COUNT(*) AS agreement_count\n    FROM pulse.agreement\n    WHERE vehicle_id IS NOT NULL\n    GROUP BY vehicle_id\n)\n\nSELECT\n    -- Application\n    a.branch_id,\n    b.branch_name,\n    a.vehicle_id,\n    a.driver_id,\n    a.employee_id,\n    a.application_type,\n    a.application_status,\n    a.downpayment_amount,\n    a.downpayment_status,\n    a.agreement_value_weeks,\n    a.agreement_length_weeks,\n    a.deposit,\n    a.total_due,\n    a.vat_value,\n    a.vehicle_source,\n    a.downpayment_order_id,\n    a.final_downpayment_order_id,\n    a.created_date AS reservation_created_date,\n\n    -- Final payment date from charge table\n    final_ch.created_date AS final_downpayment_created_date,\n\n    -- Derived from agreement table\n    COALESCE(ac.agreement_count, 0) AS agreement_count,\n\n    -- Vehicle\n    v.condition,\n    v.used,\n    v.vehicle_type_id,\n    v.vrm,\n\n    -- Vehicle Type\n    vt.manufacturer,\n    vt.model\n\nFROM pulse.application a\n\nLEFT JOIN pulse.branch b\n    ON a.branch_id = b.id\n\nLEFT JOIN pulse.vehicle v\n    ON a.vehicle_id = v.id\n\nLEFT JOIN pulse.vehicle_type vt\n    ON v.vehicle_type_id = vt.id\n\nLEFT JOIN pulse.charge final_ch\n    ON a.final_downpayment_order_id = final_ch.ordway_order_id\n\nLEFT JOIN agreement_counts ac\n    ON a.vehicle_id = ac.vehicle_id\n\nWHERE a.downpayment_amount = 99\n  AND a.downpayment_status = 'SUCCEEDED';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1136,
+        -672
+      ],
+      "id": "68137d91-6bed-4a96-8c82-987d4cca8f42",
+      "name": "Orders Via Web",
+      "credentials": {
+        "postgres": {
+          "id": "fo3dwHGlB14oR0XK",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const FLEET_FILTERS = {\n  all: null,\n  otto: ['OTTOCAR', 'LEUMI'],\n  weflex: ['LCM', 'TFS', 'TRIPLE-POINT'],\n  lcm: ['LCM'],\n  tfs: ['TFS'],\n  'triple-point': ['TRIPLE-POINT']\n};\n\nconst RESERVATION_FEE = 99.00;\nconst DOWNPAYMENT_FIELD = 'downpayment_amount';\nconst DEPOSIT_FIELD = 'deposit';\nconst WEEKS_TO_RETURN = 1;\n\nconst BRANCH_GROUPS = {\n  hammersmith: new Set(['SHEPHERDS BUSH - GOLDHAWK RD']),\n  redbridge: new Set(['ILFORD', 'ILFORD - CLEMENTS ROAD CAR PARK']),\n  dulwich: new Set(['DULWICH']),\n  hendon_colindale: new Set([\n    'COLINDALE',\n    'COLINDALE - OTTO',\n    'COLINDALE / A2Z',\n    'HENDON'\n  ]),\n  cardiff: new Set(['CARDIFF']),\n  manchester: new Set(['MANCHESTER - OTTO', 'OTTO CAR - MANCHESTER']),\n  shah_manchester: new Set(['MANCHESTER']),\n  birmingham: new Set(['BIRMINGHAM', 'OTHER - BIRMINGHAM'])\n};\n\nfunction money(value) {\n  if (value === null || value === undefined || value === '') return 0;\n  if (typeof value === 'number') return value;\n\n  const cleaned = String(value)\n    .replace(/£/g, '')\n    .replace(/,/g, '')\n    .trim();\n\n  return Number(cleaned) || 0;\n}\n\nfunction normaliseType(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase()\n    .replace(/_/g, '-')\n    .replace(/\\s+/g, '-');\n}\n\nfunction normaliseSource(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase()\n    .replace(/_/g, '-')\n    .replace(/\\s+/g, '-');\n}\n\nfunction normaliseBranchName(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase()\n    .replace(/\\s+/g, ' ');\n}\n\nfunction normaliseStatus(value) {\n  return String(value || '')\n    .trim()\n    .toUpperCase();\n}\n\nfunction getMostRecentFridayDate() {\n  const today = new Date();\n  const utcToday = new Date(Date.UTC(\n    today.getUTCFullYear(),\n    today.getUTCMonth(),\n    today.getUTCDate()\n  ));\n\n  const day = utcToday.getUTCDay();\n  const daysSinceFriday = (day + 2) % 7;\n\n  utcToday.setUTCDate(utcToday.getUTCDate() - daysSinceFriday);\n  utcToday.setUTCHours(0, 0, 0, 0);\n\n  return utcToday;\n}\n\nfunction formatDate(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nfunction getLastNFridays(count) {\n  const mostRecentFriday = getMostRecentFridayDate();\n  const weeks = [];\n\n  for (let i = count - 1; i >= 0; i--) {\n    const friday = new Date(mostRecentFriday);\n    friday.setUTCDate(mostRecentFriday.getUTCDate() - (i * 7));\n    weeks.push(formatDate(friday));\n  }\n\n  return weeks;\n}\n\nfunction getWeekBucketFriday(dateValue) {\n  if (!dateValue) return null;\n\n  const date = new Date(dateValue);\n  if (Number.isNaN(date.getTime())) return null;\n\n  const utcDate = new Date(Date.UTC(\n    date.getUTCFullYear(),\n    date.getUTCMonth(),\n    date.getUTCDate()\n  ));\n\n  const day = utcDate.getUTCDay();\n  const daysSinceMonday = (day + 6) % 7;\n\n  const monday = new Date(utcDate);\n  monday.setUTCDate(utcDate.getUTCDate() - daysSinceMonday);\n\n  const friday = new Date(monday);\n  friday.setUTCDate(monday.getUTCDate() + 4);\n\n  return formatDate(friday);\n}\n\nfunction normaliseBranchGroup(branchName) {\n  const normalised = normaliseBranchName(branchName);\n\n  for (const [group, names] of Object.entries(BRANCH_GROUPS)) {\n    if (names.has(normalised)) return group;\n  }\n\n  return null;\n}\n\nfunction isCompletedReservation(row) {\n  return normaliseStatus(row.downpayment_status) === 'SUCCEEDED';\n}\n\nfunction isReservationFee(row) {\n  const downpayment = money(row[DOWNPAYMENT_FIELD]);\n  return Math.abs(downpayment - RESERVATION_FEE) < 0.001;\n}\n\nfunction isCompletedWebSale(row) {\n  const finalDownpayment = money(row.total_due);\n  const deposit = money(row[DEPOSIT_FIELD]);\n\n  return finalDownpayment > (0.5 * deposit);\n}\n\nfunction isR2BType(type) {\n  return (\n    type.includes('R2B') ||\n    type.includes('RENT-TO-BUY') ||\n    type.includes('RENT TO BUY')\n  );\n}\n\nfunction isInServiceRentalType(type) {\n  return type.includes('IN-SERVICE-RENTAL');\n}\n\nfunction isRentalType(type) {\n  return type.includes('RENTAL') && !isInServiceRentalType(type);\n}\n\nfunction sourceMatchesFleet(vehicleSource, fleetKey) {\n  const allowedSources = FLEET_FILTERS[fleetKey];\n\n  if (!allowedSources) return true;\n\n  return allowedSources.includes(vehicleSource);\n}\n\nfunction increment(bucket, week) {\n  bucket[week] = (bucket[week] || 0) + 1;\n}\n\nfunction createWeekCounts() {\n  return {\n    website_reservations: {},\n    website_sales: {},\n\n    new_r2b_orders: {},\n    used_r2b_orders: {},\n    rentals_out: {},\n    in_service_rentals_out: {},\n\n    rentals_out_hyundai: {},\n    rentals_out_kia: {},\n    rentals_out_mercedes: {},\n    rentals_out_mg: {},\n    rentals_out_nissan: {},\n    rentals_out_skoda: {},\n    rentals_out_tesla: {},\n    rentals_out_toyota: {},\n    rentals_out_vw: {},\n    rentals_out_polestar: {},\n\n    rentals_out_hammersmith: {},\n    new_r2b_hammersmith: {},\n    used_r2b_hammersmith: {},\n\n    rentals_out_redbridge: {},\n    new_r2b_redbridge: {},\n    used_r2b_redbridge: {},\n\n    rentals_out_dulwich: {},\n    new_r2b_dulwich: {},\n    used_r2b_dulwich: {},\n\n    rentals_out_hendon_colindale: {},\n    new_r2b_hendon_colindale: {},\n    used_r2b_hendon_colindale: {},\n\n    rentals_out_cardiff: {},\n    new_r2b_cardiff: {},\n    used_r2b_cardiff: {},\n\n    rentals_out_manchester: {},\n    new_r2b_manchester: {},\n    used_r2b_manchester: {},\n\n    rentals_out_shah_manchester: {},\n    new_r2b_shah_manchester: {},\n    used_r2b_shah_manchester: {},\n\n    rentals_out_birmingham: {},\n    new_r2b_birmingham: {},\n    used_r2b_birmingham: {}\n  };\n}\n\nconst countsByFleet = Object.fromEntries(\n  Object.keys(FLEET_FILTERS).map(fleetKey => [fleetKey, createWeekCounts()])\n);\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (!isCompletedReservation(row)) continue;\n  if (!isReservationFee(row)) continue;\n\n  const vehicleSource = normaliseSource(row.vehicle_source);\n  const applicationType = normaliseType(row.application_type);\n  const reservationCreatedDate = row.reservation_created_date;\n  const finalDownpaymentCreatedDate = row.final_downpayment_created_date;\n  const branchGroup = normaliseBranchGroup(row.branch_name);\n  const manufacturerRaw = row.manufacturer;\n  const agreementCount = Number(row.agreement_count);\n\n  if (!applicationType) continue;\n\n  const reservationWeekEnding = getWeekBucketFriday(reservationCreatedDate);\n  const saleWeekEnding = getWeekBucketFriday(finalDownpaymentCreatedDate);\n\n  const manufacturer = manufacturerRaw\n    ? String(manufacturerRaw).trim().toUpperCase()\n    : null;\n\n  const isNew = agreementCount <= 1;\n  const isUsed = agreementCount > 1;\n\n  const isR2B = isR2BType(applicationType);\n  const isRental = isRentalType(applicationType);\n  const isInServiceRental = isInServiceRentalType(applicationType);\n  const completedWebSale = saleWeekEnding && isCompletedWebSale(row);\n\n  for (const fleetKey of Object.keys(FLEET_FILTERS)) {\n    if (!sourceMatchesFleet(vehicleSource, fleetKey)) continue;\n\n    const counts = countsByFleet[fleetKey];\n\n    if (reservationWeekEnding) {\n      increment(counts.website_reservations, reservationWeekEnding);\n    }\n\n    if (!completedWebSale) continue;\n\n    increment(counts.website_sales, saleWeekEnding);\n\n    if (isR2B && isNew) increment(counts.new_r2b_orders, saleWeekEnding);\n    if (isR2B && isUsed) increment(counts.used_r2b_orders, saleWeekEnding);\n    if (isRental) increment(counts.rentals_out, saleWeekEnding);\n    if (isInServiceRental) increment(counts.in_service_rentals_out, saleWeekEnding);\n\n    if (isRental && manufacturer) {\n      if (manufacturer === 'HYUNDAI') increment(counts.rentals_out_hyundai, saleWeekEnding);\n      if (manufacturer === 'KIA') increment(counts.rentals_out_kia, saleWeekEnding);\n      if (manufacturer === 'MERCEDES' || manufacturer === 'MERCEDES-BENZ') increment(counts.rentals_out_mercedes, saleWeekEnding);\n      if (manufacturer === 'MG') increment(counts.rentals_out_mg, saleWeekEnding);\n      if (manufacturer === 'NISSAN') increment(counts.rentals_out_nissan, saleWeekEnding);\n      if (manufacturer === 'SKODA') increment(counts.rentals_out_skoda, saleWeekEnding);\n      if (manufacturer === 'TESLA') increment(counts.rentals_out_tesla, saleWeekEnding);\n      if (manufacturer === 'TOYOTA') increment(counts.rentals_out_toyota, saleWeekEnding);\n      if (manufacturer === 'VW' || manufacturer === 'VOLKSWAGEN') increment(counts.rentals_out_vw, saleWeekEnding);\n      if (manufacturer === 'POLESTAR') increment(counts.rentals_out_polestar, saleWeekEnding);\n    }\n\n    if (branchGroup) {\n      if (isRental) increment(counts[`rentals_out_${branchGroup}`], saleWeekEnding);\n      if (isR2B && isNew) increment(counts[`new_r2b_${branchGroup}`], saleWeekEnding);\n      if (isR2B && isUsed) increment(counts[`used_r2b_${branchGroup}`], saleWeekEnding);\n    }\n  }\n}\n\nconst sharedWeeks = getLastNFridays(WEEKS_TO_RETURN);\nconst output = [];\n\nfor (const [fleetKey, counts] of Object.entries(countsByFleet)) {\n  for (const week of sharedWeeks) {\n    output.push({\n      json: {\n        _fleet: fleetKey,\n        Date: week,\n\n        rentals_in: null,\n        net_rentals: null,\n        net_r2b: null,\n        available_vehicles: null,\n        available_vehicles_kings_mall: null,\n        avg_days_off_road: null,\n\n        r2b_returns_cardiff: null,\n        r2b_returns_manchester: null,\n        r2b_returns_shah_manchester: null,\n        r2b_returns_birmingham: null,\n\n        ...Object.fromEntries(\n          Object.entries(counts).map(([key, values]) => [key, values[week] || 0])\n        )\n      }\n    });\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        -672
+      ],
+      "id": "6bca1714-3b0a-4a97-ac99-656305f5be01",
+      "name": "Process Orders Via Web"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = items;\n\nconst KEY_FIELDS = new Set(['_fleet', 'Date']);\n\nconst NON_ADDITIVE_FIELDS = new Set([\n  'rentals_in',\n  'net_rentals',\n  'net_r2b',\n  'available_vehicles',\n  'available_vehicles_kings_mall',\n  'avg_days_off_road',\n  'r2b_returns',\n  'r2b_returns_cardiff',\n  'r2b_returns_manchester',\n  'r2b_returns_shah_manchester',\n  'r2b_returns_birmingham'\n]);\n\nfunction isNumberLike(value) {\n  if (value === null || value === undefined || value === '') return false;\n  return !Number.isNaN(Number(value));\n}\n\nfunction mergeValue(existingValue, incomingValue, key) {\n  if (KEY_FIELDS.has(key)) return incomingValue;\n\n  if (incomingValue === undefined) return existingValue;\n  if (existingValue === undefined) return incomingValue;\n\n  if (incomingValue === null || incomingValue === '') return existingValue;\n  if (existingValue === null || existingValue === '') return incomingValue;\n\n  if (NON_ADDITIVE_FIELDS.has(key)) {\n    return existingValue ?? incomingValue;\n  }\n\n  if (isNumberLike(existingValue) && isNumberLike(incomingValue)) {\n    return Number(existingValue) + Number(incomingValue);\n  }\n\n  return incomingValue;\n}\n\nconst mergedByFleetAndDate = new Map();\n\nfor (const item of allItems) {\n  const row = item.json || {};\n  const fleet = row._fleet;\n  const date = row.Date;\n\n  if (!fleet || !date) continue;\n\n  const mergeKey = `${fleet}__${date}`;\n\n  if (!mergedByFleetAndDate.has(mergeKey)) {\n    mergedByFleetAndDate.set(mergeKey, {\n      _fleet: fleet,\n      Date: date\n    });\n  }\n\n  const mergedRow = mergedByFleetAndDate.get(mergeKey);\n\n  for (const [key, value] of Object.entries(row)) {\n    mergedRow[key] = mergeValue(mergedRow[key], value, key);\n  }\n}\n\nconst fleetOrder = {\n  all: 0,\n  otto: 1,\n  weflex: 2,\n  lcm: 3,\n  tfs: 4,\n  'triple-point': 5\n};\n\nreturn Array.from(mergedByFleetAndDate.values())\n  .sort((a, b) => {\n    if (a.Date !== b.Date) return String(a.Date).localeCompare(String(b.Date));\n    return (fleetOrder[a._fleet] ?? 99) - (fleetOrder[b._fleet] ?? 99);\n  })\n  .map(json => ({ json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -576
+      ],
+      "id": "7807c3d6-8d35-4ff8-8a51-b133c9b7029c",
+      "name": "Combine Orders Out"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -688,
+        -576
+      ],
+      "id": "032a4c02-1dd3-46fc-a757-31f2b23e34d2",
+      "name": "Merge1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Process In Service Rentals": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Sales Data - Otto",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sales Data - WeFlex",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sales Data - LCM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sales Data - TRIPLE-POINT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sales Data - TFS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sales Data - all",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Available Vehicles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Process Avg Time off Road": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Process Orders Out": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Process Orders In": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Avg time off road": {
+      "main": [
+        [
+          {
+            "node": "Process Avg Time off Road",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Available Vehicles": {
+      "main": [
+        [
+          {
+            "node": "Process Available Vehicles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "In Service Rentals": {
+      "main": [
+        [
+          {
+            "node": "Process In Service Rentals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders In": {
+      "main": [
+        [
+          {
+            "node": "Process Orders In",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders Out": {
+      "main": [
+        [
+          {
+            "node": "Process Orders Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Data - Otto": {
+      "main": [
+        [
+          {
+            "node": "Append Row in Sales - Otto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Data - WeFlex": {
+      "main": [
+        [
+          {
+            "node": "Append Row in Sales - Weflex",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Data - LCM": {
+      "main": [
+        [
+          {
+            "node": "Append Row in Sales - LCM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Data - TFS": {
+      "main": [
+        [
+          {
+            "node": "Append Row in Sales - TFS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Data - TRIPLE-POINT": {
+      "main": [
+        [
+          {
+            "node": "Append Row in Sales - TP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Orders Out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Orders In",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "In Service Rentals",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Available Vehicles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avg time off road",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Orders Via Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Data - all": {
+      "main": [
+        [
+          {
+            "node": "Append Row in Sales - All",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders Via Web": {
+      "main": [
+        [
+          {
+            "node": "Process Orders Via Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Orders Via Web": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Orders Out": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Combine Orders Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "MlhRwPBjtSHj2cfm",
+    "timezone": "Europe/London"
+  },
+  "versionId": "987f78ef-4c63-4630-a58f-81bbaad063bb",
+  "meta": {
+    "instanceId": "7a6e423a9cd76305518589a081029b53b94227b546f4ae00e4f4fc95bdbfdc1b"
+  },
+  "id": "Kgdao4qpBv3rZZK2",
+  "tags": [
+    {
+      "updatedAt": "2026-04-14T13:35:10.573Z",
+      "createdAt": "2026-04-14T13:35:10.573Z",
+      "id": "r8ug569TO7q9Xkwu",
+      "name": "Weekly Team Metrics"
+    }
+  ]
+}

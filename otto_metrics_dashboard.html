@@ -527,6 +527,7 @@ function salesDataForCurrentFleet() {
 
   return {
     ...source,
+    website_reservations: source.website_reservations || zeros,
     website_sales: source.website_sales || zeros,
     r2b_returns: source.r2b_returns || source.r2b_collections || zeros,
     regional_new: source.regional_new || zeros,
@@ -771,7 +772,8 @@ function renderSales() {
   const av    = scaleArr(d.available_vehicles, fl);
   const km    = scaleArr(d.kings_mall_avail, fl);
   const isr   = scaleArr(d.isr_out, fl);
-  const ws    = scaleArr(d.website_sales || new Array(d.weeks.length).fill(0), fl);
+  const webRes= scaleArr(d.website_reservations, fl);
+  const web   = scaleArr(d.website_sales, fl);
   const regN  = scaleArr(d.regional_new, fl);
   const regU  = scaleArr(d.regional_used, fl);
 
@@ -783,14 +785,15 @@ function renderSales() {
     `Sales — ${fleetView.label} — week of ${latestShort}`;
 
   document.getElementById('sales-insight').innerHTML =
-    `<strong>${fmt(nr2b[cur])} new R2B + ${fmt(ur2b[cur])} used R2B</strong> group-wide. Web sales: <strong>${fmt(ws[cur])}</strong>. Net rentals <strong>${netnr[cur]>=0?'+':''}${fmt(netnr[cur])}</strong>${netnr[cur]<0?' — negative flow':' — positive flow'}. Rentals out: <strong>${fmt(ro[cur])}</strong> vs in: <strong>${fmt(ri[cur])}</strong>. In-service rentals out: <strong>${fmt(isr[cur])}</strong>. Available: <strong>${fmt(av[cur])}</strong> (Kings Mall: ${fmt(km[cur])}). Avg days off road: <strong>${d.avg_days_offroad[cur]}</strong>.`;
+    `<strong>${fmt(nr2b[cur])} new R2B + ${fmt(ur2b[cur])} used R2B</strong> group-wide. Web reservations: <strong>${fmt(webRes[cur])}</strong>; completed web sales: <strong>${fmt(web[cur])}</strong>. Net rentals <strong>${netnr[cur]>=0?'+':''}${fmt(netnr[cur])}</strong>${netnr[cur]<0?' — negative flow':' — positive flow'}. Rentals out: <strong>${fmt(ro[cur])}</strong> vs in: <strong>${fmt(ri[cur])}</strong>. In-service rentals out: <strong>${fmt(isr[cur])}</strong>. Available: <strong>${fmt(av[cur])}</strong> (Kings Mall: ${fmt(km[cur])}). Avg days off road: <strong>${d.avg_days_offroad[cur]}</strong>.`;
 
   // ── KPI cards — swap "available vehicles" for "in-service rentals" ──
   document.getElementById('sales-stats').innerHTML =
     statCard('New R2B orders', nr2b[cur], nr2b[prev]) +
     statCard('Used R2B orders', ur2b[cur], ur2b[prev], '', 'pa') +
-    statCard('Web sales', ws[cur], ws[prev], '', 'pa') +
     statCard('Rentals out', ro[cur], ro[prev]) +
+    statCard('Web reservations', webRes[cur], webRes[prev], '', 'pa') +
+    statCard('Web sales', web[cur], web[prev], '', 'pa') +
     statCard('Rentals in', ri[cur], ri[prev], '', '', {inverseDelta:true}) +
     statCard('Net rentals', netnr[cur], netnr[prev], '', netnr[cur]>=0?'green':'da') +
     statCard('Net R2B', netr2b[cur], netr2b[prev], '', netr2b[cur]>=0?'green':'da') +
@@ -1693,13 +1696,14 @@ function transformSalesRows(rows) {
     total_r2b_used: col(sortedRows, 'used_r2b_orders'),
     rentals_out: col(sortedRows, 'rentals_out'),
     rentals_in: col(sortedRows, 'rentals_in'),
+    website_reservations: col(sortedRows, 'website_reservations'),
+    website_sales: col(sortedRows, 'website_sales'),
     r2b_returns: sumCols([
       'r2b_returns_cardiff',
       'r2b_returns_manchester',
       'r2b_returns_shah_manchester',
       'r2b_returns_birmingham'
     ]),
-    website_sales: col(sortedRows, 'website_sales'),
     net_rentals: col(sortedRows, 'net_rentals'),
     net_r2b: col(sortedRows, 'net_r2b'),
     available_vehicles: col(sortedRows, 'available_vehicles'),
